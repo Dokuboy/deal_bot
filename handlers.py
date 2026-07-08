@@ -1,7 +1,9 @@
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, ReplyKeyboardRemove
-from google_sheets import add_deal_to_sheet
+from google_sheets import add_deal_to_sheet, find_deal_by_id, update_deal_by_id, get_last_rows
 from openai import OpenAI
 from config import DEEPSEEK_API_KEY, ADMIN_ID, BOT_TOKEN
 import json
@@ -12,8 +14,12 @@ bot = Bot(token=BOT_TOKEN)
 
 client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
+# --- Состояния для обновления ---
+class UpdateStates(StatesGroup):
+    waiting_for_new_data = State()
+
+# --- Вспомогательные функции ---
 def format_priority(priority_str):
-    """Форматирует Priority из сообщения в читаемый вид"""
     if not priority_str:
         return ""
     p = priority_str.lower().strip()
@@ -25,20 +31,23 @@ def format_priority(priority_str):
         return "Low 🔴"
     return priority_str
 
+# --- Команды ---
 @router.message(Command("start"))
 async def cmd_start(message: Message):
     if message.chat.type == "private":
         await message.answer(
-            "👋 Бот для автоматического добавления оферов в Google Таблицу.\n"
-            "Просто отправьте офер текстом, и я добавлю его в таблицу.\n"
-            "Для Priority укажите: High, Middle или Low.\n"
-            "Если Priority не указан — поле останется пустым.",
+            "👋 Бот для автоматического добавления оферов в Google Таблицу.\n\n"
+            "📌 Команды:\n"
+            "/add - добавить новый офер (или просто отправьте текст с офером)\n"
+            "/list - показать последние 10 записей\n"
+            "/view {ID} - показать сделку по ID\n"
+            "/update {ID} - обновить сделку по ID\n"
+            "/cancel - отменить обновление",
             reply_markup=ReplyKeyboardRemove()
         )
 
 @router.message(Command("list"))
 async def cmd_list(message: Message):
-    from google_sheets import get_last_rows
     rows = get_last_rows(10)
     if not rows:
         await message.answer("📭 В таблице пока нет записей.")
@@ -46,17 +55,132 @@ async def cmd_list(message: Message):
     text = "📋 **Последние 10 записей:**\n\n"
     for i, row in enumerate(rows, 1):
         if len(row) >= 10:
-            text += f"{i}. GEO: {row[1]}, Цена: {row[2]}, Priority: {row[6] or '—'}\n"
+            text += f"{i}. ID: {row[0]}, GEO: {row[1]}, Цена: {row[2]}, Priority: {row[6] or '—'}\n"
         else:
             text += f"{i}. {row[:3]}\n"
     await message.answer(text, parse_mode="Markdown")
 
+@router.message(Command("view"))
+async def cmd_view(message: Message):
+    args = message.text.split()
+    if len(args) < 2:
+        await message.answer("❌ Укажите ID: /view 112323")
+        return
+    
+    deal_id = args[1]
+    row, _ = find_deal_by_id(deal_id)
+    
+    if row is None:
+        await message.answer(f"❌ Сделка с ID {deal_id} не найдена.")
+        return
+    
+    text = f"""
+📋 **Сделка #{deal_id}**
+
+ID партнера: {row[0]}
+GEO: {row[1]}
+Цена (без маржи): {row[2]}
+Воронка: {row[3]}
+Source: {row[4]}
+CR: {row[5] or '—'}
+Priority: {row[6] or '—'}
+Deduction: {row[7] or '—'}
+Комментарий: {row[8] or '—'}
+Менеджер: {row[9] or '—'}
+    """
+    await message.answer(text, parse_mode="Markdown")
+
+@router.message(Command("update"))
+async def cmd_update(message: Message, state: FSMContext):
+    args = message.text.split()
+    if len(args) < 2:
+        await message.answer("❌ Укажите ID: /update 112323")
+        return
+    
+    deal_id = args[1]
+    await state.update_data(deal_id=deal_id)
+    
+    row, _ = find_deal_by_id(deal_id)
+    if row is None:
+        await message.answer(f"❌ Сделка с ID {deal_id} не найдена.")
+        await state.clear()
+        return
+    
+    # Показываем текущие данные
+    current = f"""
+📋 **Текущие данные сделки #{deal_id}**
+
+GEO: {row[1]}
+Цена: {row[2]}
+Воронка: {row[3]}
+Source: {row[4]}
+CR: {row[5] or '—'}
+Priority: {row[6] or '—'}
+Deduction: {row[7] or '—'}
+Комментарий: {row[8] or '—'}
+Менеджер: {row[9] or '—'}
+
+📝 Отправьте **НОВЫЕ** данные в формате:
+`GEO | Цена | Воронка | Source | CR | Priority | Deduction | Комментарий | Менеджер`
+
+Например:
+`UK | CRG 1350$+12% | AIProfitApp, AI CapitalSystem | GG+SEO | CR 13%+ | High | 10% | Новый комментарий | David`
+
+Для отмены отправьте /cancel
+    """
+    await message.answer(current, parse_mode="Markdown")
+    await state.set_state(UpdateStates.waiting_for_new_data)
+
+@router.message(UpdateStates.waiting_for_new_data)
+async def process_update(message: Message, state: FSMContext):
+    data = await state.get_data()
+    deal_id = data.get('deal_id')
+    
+    # Проверка на отмену
+    if message.text.startswith("/cancel"):
+        await message.answer("❌ Обновление отменено.")
+        await state.clear()
+        return
+    
+    # Парсим строку с данными
+    parts = [p.strip() for p in message.text.split('|')]
+    if len(parts) < 9:
+        await message.answer(
+            "❌ Неверный формат. Нужно 9 полей через |\n"
+            "Пример: `GEO | Цена | Воронка | Source | CR | Priority | Deduction | Комментарий | Менеджер`",
+            parse_mode="Markdown"
+        )
+        return
+    
+    # Собираем новую строку с ID
+    new_row = [deal_id] + parts  # ID + 9 полей = 10 столбцов
+    
+    success = update_deal_by_id(deal_id, new_row)
+    
+    if success:
+        await message.answer(f"✅ Сделка #{deal_id} успешно обновлена!")
+    else:
+        await message.answer(f"❌ Ошибка при обновлении сделки #{deal_id}.")
+    
+    await state.clear()
+
+@router.message(Command("cancel"))
+async def cmd_cancel(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer("✅ Операция отменена.")
+
+# --- Основной обработчик сообщений (добавление новых сделок) ---
 @router.message(F.text)
 async def parse_deals_with_ai(message: Message):
     user_text = message.text
     chat_id = message.chat.id
     sender_name = message.from_user.full_name
 
+    # Игнорируем команды
+    if user_text.startswith('/'):
+        return
+
+    # Фильтр ключевых слов
     keywords = ["CRG", "Daily cap", "AIProfitApp", "QuantSystemAI", "AICapitalPlatform", "CR", "СR",
                 "price:", "source:", "Geo:", "Campaign:", "Manager", "id", "deduction", "priority"]
     if not any(kw in user_text for kw in keywords):
@@ -142,6 +266,7 @@ async def parse_deals_with_ai(message: Message):
                 
                 priority = format_priority(priority_raw) if priority_raw else ""
                 
+                # Столбцы: ID партнера | GEO | Цена | Воронка | Source | CR | Priority | Deduction | Комментарий | Менеджер
                 row = [
                     deal.get('id', ''),
                     deal.get('geo', ''),
