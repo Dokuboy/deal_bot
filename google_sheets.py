@@ -107,41 +107,4 @@ def update_deal_by_id(deal_id, new_row_data):
         return True
     except Exception as e:
         print(f"❌ Ошибка обновления: {e}")
-        return False        return []
-
-def find_deal_by_id(deal_id):
-    """Находит строку с указанным ID (первый столбец) и возвращает (row_data, row_index)"""
-    try:
-        sheet = get_sheet()
-        all_rows = sheet.get_all_values()
-        
-        for idx, row in enumerate(all_rows, start=1):
-            if idx == 1:  # Пропускаем заголовки
-                continue
-            if row and row[0].strip() == str(deal_id):
-                return row, idx
-        
-        return None, None
-    except Exception as e:
-        print(f"❌ Ошибка поиска: {e}")
-        return None, None
-
-def update_deal_by_id(deal_id, new_row_data):
-    """Обновляет строку с указанным ID (первый столбец)"""
-    try:
-        sheet = get_sheet()
-        _, row_index = find_deal_by_id(deal_id)
-        
-        if row_index is None:
-            print(f"❌ Сделка {deal_id} не найдена")
-            return False
-        
-        # Обновляем строку (10 столбцов)
-        cell_range = f"A{row_index}:J{row_index}"
-        sheet.update(cell_range, [new_row_data[:10]])  # Берём первые 10 полей
-        print(f"✅ Сделка {deal_id} обновлена (строка {row_index})")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Ошибка обновления: {e}")
         return False
