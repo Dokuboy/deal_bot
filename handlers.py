@@ -181,8 +181,9 @@ async def parse_deals_with_ai(message: Message):
         return
 
     # Фильтр ключевых слов
-    keywords = ["CRG", "Daily cap", "AIProfitApp", "QuantSystemAI", "AICapitalPlatform", "CR", "СR",
-                "price:", "source:", "Geo:", "Campaign:", "Manager", "id", "deduction", "priority"]
+    keywords = ["CRG", "Daily cap", "AIProfitApp", "QuantSystemAI", "AICapitalPlatform", 
+            "CR", "СR", "price:", "source:", "Geo:", "Campaign:", "Manager", "id", 
+            "deduction", "priority", "CPL", "BItGPT", "MareaFortencia", "Kira", "high", "low", "middle"]
     if not any(kw in user_text for kw in keywords):
         return
 
