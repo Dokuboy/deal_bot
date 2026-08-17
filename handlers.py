@@ -14,6 +14,25 @@ bot = Bot(token=BOT_TOKEN)
 
 client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
+# --- Настройки для автоматического сбора сообщений ---
+# Список ID чатов, которые бот слушает (добавьте свои)
+WATCHED_CHATS = [
+    -1001234567890,  # ID группы 1 (замените на свой)
+    -1009876543210,  # ID группы 2 (замените на свой)
+    # 123456789,     # ID личного чата (положительное число)
+]
+
+# ID чата-хранилища (куда пересылать отфильтрованные сообщения)
+STORAGE_CHAT_ID = -1001122334455  # ЗАМЕНИТЕ на ID вашей группы-хранилища
+
+# Ключевые слова для фильтрации
+FILTER_KEYWORDS = [
+    "CRG", "CPL", "офер", "сделка", "оффер",
+    "price:", "source:", "geo:", "priority",
+    "Kira", "David", "Manager", "AIProfitApp",
+    "QuantSystemAI", "AICapitalPlatform"
+]
+
 # --- Состояния для обновления ---
 class UpdateStates(StatesGroup):
     waiting_for_new_data = State()
@@ -169,7 +188,40 @@ async def cmd_cancel(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("✅ Операция отменена.")
 
-# --- Основной обработчик сообщений (добавление новых сделок) ---
+# --- АВТОМАТИЧЕСКИЙ СБОР СООБЩЕНИЙ ---
+@router.message(F.text)
+async def auto_collect_messages(message: Message):
+    """
+    Автоматически собирает сообщения из указанных чатов
+    и пересылает в хранилище, если они подходят под фильтр.
+    Работает полностью автоматически, без команд.
+    """
+    
+    # Проверяем, что сообщение из отслеживаемого чата
+    if message.chat.id not in WATCHED_CHATS:
+        return  # Игнорируем
+    
+    # Проверяем, что это текстовое сообщение и не слишком короткое
+    if not message.text or len(message.text) < 10:
+        return
+    
+    # Проверяем фильтр по ключевым словам
+    text_lower = message.text.lower()
+    if not any(keyword.lower() in text_lower for keyword in FILTER_KEYWORDS):
+        return
+    
+    # Пересылаем сообщение в чат-хранилище
+    try:
+        await bot.forward_message(
+            chat_id=STORAGE_CHAT_ID,
+            from_chat_id=message.chat.id,
+            message_id=message.message_id
+        )
+        print(f"📨 Автоматически переслано сообщение из чата {message.chat.id}")
+    except Exception as e:
+        print(f"❌ Ошибка пересылки: {e}")
+
+# --- Основной обработчик для парсинга оферов (НЕ ЗАБЫВАЕМ ПРО ЭТОТ БЛОК!) ---
 @router.message(F.text)
 async def parse_deals_with_ai(message: Message):
     user_text = message.text
@@ -180,7 +232,7 @@ async def parse_deals_with_ai(message: Message):
     if user_text.startswith('/'):
         return
 
-    # Фильтр ключевых слов
+    # Фильтр ключевых слов для оферов
     keywords = ["CRG", "Daily cap", "AIProfitApp", "QuantSystemAI", "AICapitalPlatform", 
             "CR", "СR", "price:", "source:", "Geo:", "Campaign:", "Manager", "id", 
             "deduction", "priority", "CPL", "BItGPT", "MareaFortencia", "Kira", "high", "low", "middle"]
