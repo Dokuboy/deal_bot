@@ -3,54 +3,100 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, ReplyKeyboardRemove
-from google_sheets import add_deal_to_sheet, find_deal_by_id, update_deal_by_id, get_last_rows
+
+from google_sheets import (
+    add_deal_to_sheet,
+    find_deal_by_id,
+    update_deal_by_id,
+    get_last_rows
+)
+
 from openai import OpenAI
 from config import DEEPSEEK_API_KEY, ADMIN_ID, BOT_TOKEN
+
 import json
 import re
+
 
 router = Router()
 bot = Bot(token=BOT_TOKEN)
 
-client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+client = OpenAI(
+    api_key=DEEPSEEK_API_KEY,
+    base_url="https://api.deepseek.com"
+)
 
-# --- Настройки для автоматического сбора сообщений ---
-# Список ID чатов, которые бот слушает (добавьте свои)
+
+# ============================================================
+# НАСТРОЙКИ ДЛЯ АВТОМАТИЧЕСКОГО СБОРА СООБЩЕНИЙ
+# ============================================================
+
+# Список ID чатов, которые сам aiogram-бот слушает
 WATCHED_CHATS = [
-    -8937014146,  # ID группы 1 (замените на свой)
-    -1009876543210,  # ID группы 2 (замените на свой)
-    # 123456789,     # ID личного чата (положительное число)
+    -8937014146,
+    -1009876543210,
+    # 123456789,
 ]
 
-# ID чата-хранилища (куда пересылать отфильтрованные сообщения)
-STORAGE_CHAT_ID = -8937014146  # ЗАМЕНИТЕ на ID вашей группы-хранилища
+
+# ID чата-хранилища
+STORAGE_CHAT_ID = -8937014146
+
 
 # Ключевые слова для фильтрации
 FILTER_KEYWORDS = [
-    "CRG", "CPL", "офер", "сделка", "оффер",
-    "price:", "source:", "geo:", "priority",
-    "Kira", "David", "Manager", "AIProfitApp",
-    "QuantSystemAI", "AICapitalPlatform"
+    "CRG",
+    "CPL",
+    "офер",
+    "сделка",
+    "оффер",
+    "price:",
+    "source:",
+    "geo:",
+    "priority",
+    "Kira",
+    "David",
+    "Manager",
+    "AIProfitApp",
+    "QuantSystemAI",
+    "AICapitalPlatform"
 ]
 
-# --- Состояния для обновления ---
+
+# ============================================================
+# СОСТОЯНИЯ ДЛЯ ОБНОВЛЕНИЯ
+# ============================================================
+
 class UpdateStates(StatesGroup):
     waiting_for_new_data = State()
 
-# --- Вспомогательные функции ---
+
+# ============================================================
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+# ============================================================
+
 def format_priority(priority_str):
     if not priority_str:
         return ""
+
     p = priority_str.lower().strip()
+
     if p in ["high", "h"]:
         return "High 🟢"
+
     elif p in ["middle", "medium", "m"]:
         return "Middle 🟡"
+
     elif p in ["low", "l"]:
         return "Low 🔴"
+
     return priority_str
 
-# --- Команды ---
+
+# ============================================================
+# /START
+# ============================================================
+
 @router.message(Command("start"))
 async def cmd_start(message: Message):
     if message.chat.type == "private":
@@ -65,34 +111,63 @@ async def cmd_start(message: Message):
             reply_markup=ReplyKeyboardRemove()
         )
 
+
+# ============================================================
+# /LIST
+# ============================================================
+
 @router.message(Command("list"))
 async def cmd_list(message: Message):
     rows = get_last_rows(10)
+
     if not rows:
         await message.answer("📭 В таблице пока нет записей.")
         return
+
     text = "📋 **Последние 10 записей:**\n\n"
+
     for i, row in enumerate(rows, 1):
         if len(row) >= 10:
-            text += f"{i}. ID: {row[0]}, GEO: {row[1]}, Цена: {row[2]}, Priority: {row[6] or '—'}\n"
+            text += (
+                f"{i}. "
+                f"ID: {row[0]}, "
+                f"GEO: {row[1]}, "
+                f"Цена: {row[2]}, "
+                f"Priority: {row[6] or '—'}\n"
+            )
         else:
             text += f"{i}. {row[:3]}\n"
-    await message.answer(text, parse_mode="Markdown")
+
+    await message.answer(
+        text,
+        parse_mode="Markdown"
+    )
+
+
+# ============================================================
+# /VIEW
+# ============================================================
 
 @router.message(Command("view"))
 async def cmd_view(message: Message):
     args = message.text.split()
+
     if len(args) < 2:
-        await message.answer("❌ Укажите ID: /view 112323")
+        await message.answer(
+            "❌ Укажите ID: /view 112323"
+        )
         return
-    
+
     deal_id = args[1]
+
     row, _ = find_deal_by_id(deal_id)
-    
+
     if row is None:
-        await message.answer(f"❌ Сделка с ID {deal_id} не найдена.")
+        await message.answer(
+            f"❌ Сделка с ID {deal_id} не найдена."
+        )
         return
-    
+
     text = f"""
 📋 **Сделка #{deal_id}**
 
@@ -106,26 +181,48 @@ Priority: {row[6] or '—'}
 Deduction: {row[7] or '—'}
 Комментарий: {row[8] or '—'}
 Менеджер: {row[9] or '—'}
-    """
-    await message.answer(text, parse_mode="Markdown")
+"""
+
+    await message.answer(
+        text,
+        parse_mode="Markdown"
+    )
+
+
+# ============================================================
+# /UPDATE
+# ============================================================
 
 @router.message(Command("update"))
-async def cmd_update(message: Message, state: FSMContext):
+async def cmd_update(
+    message: Message,
+    state: FSMContext
+):
     args = message.text.split()
+
     if len(args) < 2:
-        await message.answer("❌ Укажите ID: /update 112323")
+        await message.answer(
+            "❌ Укажите ID: /update 112323"
+        )
         return
-    
+
     deal_id = args[1]
-    await state.update_data(deal_id=deal_id)
-    
+
+    await state.update_data(
+        deal_id=deal_id
+    )
+
     row, _ = find_deal_by_id(deal_id)
+
     if row is None:
-        await message.answer(f"❌ Сделка с ID {deal_id} не найдена.")
+        await message.answer(
+            f"❌ Сделка с ID {deal_id} не найдена."
+        )
+
         await state.clear()
+
         return
-    
-    # Показываем текущие данные
+
     current = f"""
 📋 **Текущие данные сделки #{deal_id}**
 
@@ -146,100 +243,237 @@ Deduction: {row[7] or '—'}
 `UK | CRG 1350$+12% | AIProfitApp, AI CapitalSystem | GG+SEO | CR 13%+ | High | 10% | Новый комментарий | David`
 
 Для отмены отправьте /cancel
-    """
-    await message.answer(current, parse_mode="Markdown")
-    await state.set_state(UpdateStates.waiting_for_new_data)
+"""
+
+    await message.answer(
+        current,
+        parse_mode="Markdown"
+    )
+
+    await state.set_state(
+        UpdateStates.waiting_for_new_data
+    )
+
+
+# ============================================================
+# ОБРАБОТКА ОБНОВЛЕНИЯ
+# ============================================================
 
 @router.message(UpdateStates.waiting_for_new_data)
-async def process_update(message: Message, state: FSMContext):
+async def process_update(
+    message: Message,
+    state: FSMContext
+):
     data = await state.get_data()
-    deal_id = data.get('deal_id')
-    
+
+    deal_id = data.get("deal_id")
+
+    if not message.text:
+        return
+
     # Проверка на отмену
     if message.text.startswith("/cancel"):
-        await message.answer("❌ Обновление отменено.")
+        await message.answer(
+            "❌ Обновление отменено."
+        )
+
         await state.clear()
+
         return
-    
+
     # Парсим строку с данными
-    parts = [p.strip() for p in message.text.split('|')]
+    parts = [
+        p.strip()
+        for p in message.text.split("|")
+    ]
+
     if len(parts) < 9:
         await message.answer(
             "❌ Неверный формат. Нужно 9 полей через |\n"
-            "Пример: `GEO | Цена | Воронка | Source | CR | Priority | Deduction | Комментарий | Менеджер`",
+            "Пример: "
+            "`GEO | Цена | Воронка | Source | CR | Priority | "
+            "Deduction | Комментарий | Менеджер`",
             parse_mode="Markdown"
         )
+
         return
-    
-    # Собираем новую строку с ID
-    new_row = [deal_id] + parts  # ID + 9 полей = 10 столбцов
-    
-    success = update_deal_by_id(deal_id, new_row)
-    
+
+    # ID + 9 полей = 10 столбцов
+    new_row = [deal_id] + parts
+
+    success = update_deal_by_id(
+        deal_id,
+        new_row
+    )
+
     if success:
-        await message.answer(f"✅ Сделка #{deal_id} успешно обновлена!")
+        await message.answer(
+            f"✅ Сделка #{deal_id} успешно обновлена!"
+        )
+
     else:
-        await message.answer(f"❌ Ошибка при обновлении сделки #{deal_id}.")
-    
+        await message.answer(
+            f"❌ Ошибка при обновлении сделки #{deal_id}."
+        )
+
     await state.clear()
+
+
+# ============================================================
+# /CANCEL
+# ============================================================
 
 @router.message(Command("cancel"))
-async def cmd_cancel(message: Message, state: FSMContext):
+async def cmd_cancel(
+    message: Message,
+    state: FSMContext
+):
     await state.clear()
-    await message.answer("✅ Операция отменена.")
 
-# --- АВТОМАТИЧЕСКИЙ СБОР СООБЩЕНИЙ ---
-@router.message(F.text)
+    await message.answer(
+        "✅ Операция отменена."
+    )
+
+
+# ============================================================
+# АВТОМАТИЧЕСКИЙ СБОР СООБЩЕНИЙ
+#
+# ВАЖНО:
+# Раньше здесь был просто @router.message(F.text).
+#
+# Теперь этот обработчик вызывается ТОЛЬКО для WATCHED_CHATS.
+# Поэтому он не будет мешать основному DeepSeek-парсеру.
+# ============================================================
+
+@router.message(
+    F.chat.id.in_(WATCHED_CHATS),
+    F.text
+)
 async def auto_collect_messages(message: Message):
     """
     Автоматически собирает сообщения из указанных чатов
     и пересылает в хранилище, если они подходят под фильтр.
-    Работает полностью автоматически, без команд.
     """
-    
-    # Проверяем, что сообщение из отслеживаемого чата
-    if message.chat.id not in WATCHED_CHATS:
-        return  # Игнорируем
-    
-    # Проверяем, что это текстовое сообщение и не слишком короткое
-    if not message.text or len(message.text) < 10:
+
+    if not message.text:
         return
-    
-    # Проверяем фильтр по ключевым словам
+
+    if len(message.text) < 10:
+        return
+
     text_lower = message.text.lower()
-    if not any(keyword.lower() in text_lower for keyword in FILTER_KEYWORDS):
+
+    if not any(
+        keyword.lower() in text_lower
+        for keyword in FILTER_KEYWORDS
+    ):
         return
-    
-    # Пересылаем сообщение в чат-хранилище
+
     try:
         await bot.forward_message(
             chat_id=STORAGE_CHAT_ID,
             from_chat_id=message.chat.id,
             message_id=message.message_id
         )
-        print(f"📨 Автоматически переслано сообщение из чата {message.chat.id}")
-    except Exception as e:
-        print(f"❌ Ошибка пересылки: {e}")
 
-# --- Основной обработчик для парсинга оферов (НЕ ЗАБЫВАЕМ ПРО ЭТОТ БЛОК!) ---
+        print(
+            f"📨 Автоматически переслано сообщение "
+            f"из чата {message.chat.id}"
+        )
+
+    except Exception as e:
+        print(
+            f"❌ Ошибка пересылки: {e}"
+        )
+
+
+# ============================================================
+# ОСНОВНОЙ ОБРАБОТЧИК ДЛЯ ПАРСИНГА ОФЕРОВ
+# ============================================================
+
 @router.message(F.text)
 async def parse_deals_with_ai(message: Message):
+
+    # ========================================================
+    # НОВАЯ ЗАЩИТА ДЛЯ TELETHON
+    #
+    # Если сообщение было ПЕРЕСЛАНО в SHARMINATOR,
+    # оно остаётся в личном чате,
+    # но НЕ отправляется в DeepSeek
+    # и НЕ записывается в Google Sheets.
+    # ========================================================
+
+    if message.forward_origin is not None:
+        print(
+            "📨 Получено пересланное сообщение. "
+            "Запись в Google Sheets пропущена."
+        )
+        return
+
+
     user_text = message.text
+
     chat_id = message.chat.id
-    sender_name = message.from_user.full_name
+
+    sender_name = (
+        message.from_user.full_name
+        if message.from_user
+        else "Unknown"
+    )
+
 
     # Игнорируем команды
-    if user_text.startswith('/'):
+    if user_text.startswith("/"):
         return
 
-    # Фильтр ключевых слов для оферов
-    keywords = ["CRG", "Daily cap", "AIProfitApp", "QuantSystemAI", "AICapitalPlatform", 
-            "CR", "СR", "price:", "source:", "Geo:", "Campaign:", "Manager", "id", 
-            "deduction", "priority", "CPL", "BItGPT", "MareaFortencia", "Kira", "high", "low", "middle"]
-    if not any(kw in user_text for kw in keywords):
+
+    # ========================================================
+    # ФИЛЬТР КЛЮЧЕВЫХ СЛОВ ДЛЯ ОФЕРОВ
+    # ========================================================
+
+    keywords = [
+        "CRG",
+        "Daily cap",
+        "AIProfitApp",
+        "QuantSystemAI",
+        "AICapitalPlatform",
+        "CR",
+        "СR",
+        "price:",
+        "source:",
+        "Geo:",
+        "Campaign:",
+        "Manager",
+        "id",
+        "deduction",
+        "priority",
+        "CPL",
+        "BItGPT",
+        "MareaFortencia",
+        "Kira",
+        "high",
+        "low",
+        "middle"
+    ]
+
+    if not any(
+        kw in user_text
+        for kw in keywords
+    ):
         return
 
-    await bot.send_message(ADMIN_ID, f"🔍 Начинаю парсить офер от {sender_name} в чате {chat_id}")
+
+    await bot.send_message(
+        ADMIN_ID,
+        f"🔍 Начинаю парсить офер "
+        f"от {sender_name} "
+        f"в чате {chat_id}"
+    )
+
+
+    # ========================================================
+    # SYSTEM PROMPT DEEPSEEK
+    # ========================================================
 
     system_prompt = """
 Ты — ассистент, который извлекает данные о сделках из неструктурированного текста.
@@ -273,82 +507,278 @@ async def parse_deals_with_ai(message: Message):
 Ответ должен содержать ТОЛЬКО JSON-массив без лишнего текста.
 """
 
+
     try:
+
+        # ====================================================
+        # ЗАПРОС В DEEPSEEK
+        # ====================================================
+
         response = client.chat.completions.create(
             model="deepseek-chat",
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_text}
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": user_text
+                }
             ],
             temperature=0.1
         )
-        
-        ai_response = response.choices[0].message.content
-        print(f"Ответ от DeepSeek: {ai_response}")
-        
-        json_match = re.search(r'\[.*\]', ai_response, re.DOTALL)
+
+
+        ai_response = (
+            response
+            .choices[0]
+            .message
+            .content
+        )
+
+        print(
+            f"Ответ от DeepSeek: {ai_response}"
+        )
+
+
+        # ====================================================
+        # ИЗВЛЕКАЕМ JSON
+        # ====================================================
+
+        json_match = re.search(
+            r"\[.*\]",
+            ai_response,
+            re.DOTALL
+        )
+
         if json_match:
             ai_response = json_match.group(0)
-        
-        deals_data = json.loads(ai_response)
-        
-        if not deals_data or not isinstance(deals_data, list):
-            await bot.send_message(ADMIN_ID, f"⚠️ Не удалось распарсить офер от {sender_name}.")
+
+
+        deals_data = json.loads(
+            ai_response
+        )
+
+
+        if (
+            not deals_data
+            or not isinstance(deals_data, list)
+        ):
+            await bot.send_message(
+                ADMIN_ID,
+                f"⚠️ Не удалось распарсить "
+                f"офер от {sender_name}."
+            )
+
             return
-        
-        # Разбиваем Geo на отдельные страны
+
+
+        # ====================================================
+        # РАЗБИВАЕМ GEO НА ОТДЕЛЬНЫЕ СТРАНЫ
+        # ====================================================
+
         expanded = []
+
         for deal in deals_data:
-            geo_raw = deal.get('geo', '')
-            if '/' in geo_raw or ',' in geo_raw:
-                countries = [g.strip() for g in re.split(r'[/,]\s*', geo_raw) if g.strip()]
+
+            geo_raw = deal.get(
+                "geo",
+                ""
+            )
+
+            if "/" in geo_raw or "," in geo_raw:
+
+                countries = [
+                    g.strip()
+                    for g in re.split(
+                        r"[/,]\s*",
+                        geo_raw
+                    )
+                    if g.strip()
+                ]
+
                 for country in countries:
+
                     new_deal = deal.copy()
-                    new_deal['geo'] = country
-                    expanded.append(new_deal)
+
+                    new_deal["geo"] = country
+
+                    expanded.append(
+                        new_deal
+                    )
+
             else:
-                expanded.append(deal)
+
+                expanded.append(
+                    deal
+                )
+
+
         deals_data = expanded
 
+
+        # ====================================================
+        # ЗАПИСЬ СДЕЛОК
+        # ====================================================
+
         success = 0
+
+
         for deal in deals_data:
+
             try:
-                price = deal.get('price', '')
-                priority_raw = deal.get('priority', '')
-                deduction = deal.get('deduction', '')
-                
-                priority = format_priority(priority_raw) if priority_raw else ""
-                
-                # Столбцы: ID партнера | GEO | Цена | Воронка | Source | CR | Priority | Deduction | Комментарий | Менеджер
+
+                price = deal.get(
+                    "price",
+                    ""
+                )
+
+                priority_raw = deal.get(
+                    "priority",
+                    ""
+                )
+
+                deduction = deal.get(
+                    "deduction",
+                    ""
+                )
+
+
+                priority = (
+                    format_priority(priority_raw)
+                    if priority_raw
+                    else ""
+                )
+
+
+                # =================================================
+                # СТОЛБЦЫ:
+                #
+                # ID партнера
+                # GEO
+                # Цена
+                # Воронка
+                # Source
+                # CR
+                # Priority
+                # Deduction
+                # Комментарий
+                # Менеджер
+                # =================================================
+
                 row = [
-                    deal.get('id', ''),
-                    deal.get('geo', ''),
+                    deal.get(
+                        "id",
+                        ""
+                    ),
+
+                    deal.get(
+                        "geo",
+                        ""
+                    ),
+
                     price,
-                    deal.get('campaign', ''),
-                    deal.get('source', ''),
-                    '',
+
+                    deal.get(
+                        "campaign",
+                        ""
+                    ),
+
+                    deal.get(
+                        "source",
+                        ""
+                    ),
+
+                    "",
+
                     priority,
+
                     deduction,
-                    '',
-                    deal.get('manager', sender_name)
+
+                    "",
+
+                    deal.get(
+                        "manager",
+                        sender_name
+                    )
                 ]
-                add_deal_to_sheet(row)
+
+
+                add_deal_to_sheet(
+                    row
+                )
+
                 success += 1
-                print(f"✅ Записано: {row}")
+
+                print(
+                    f"✅ Записано: {row}"
+                )
+
+
             except Exception as e:
-                print(f"Ошибка записи: {e}")
-                await bot.send_message(ADMIN_ID, f"❌ Ошибка записи: {e}")
-        
+
+                print(
+                    f"Ошибка записи: {e}"
+                )
+
+                await bot.send_message(
+                    ADMIN_ID,
+                    f"❌ Ошибка записи: {e}"
+                )
+
+
+        # ====================================================
+        # РЕЗУЛЬТАТ
+        # ====================================================
+
         if success > 0:
-            await bot.send_message(ADMIN_ID, f"✅ Добавлено {success} сделок от {sender_name}")
-            await message.answer(f"✅ Добавлено {success} сделок в Google Таблицу!")
+
+            await bot.send_message(
+                ADMIN_ID,
+                f"✅ Добавлено {success} "
+                f"сделок от {sender_name}"
+            )
+
+            await message.answer(
+                f"✅ Добавлено {success} "
+                f"сделок в Google Таблицу!"
+            )
+
+
         else:
-            await bot.send_message(ADMIN_ID, f"⚠️ Офер от {sender_name} не содержал данных для записи.")
-            await message.answer("⚠️ Не удалось добавить сделки. Проверьте формат.")
+
+            await bot.send_message(
+                ADMIN_ID,
+                f"⚠️ Офер от {sender_name} "
+                f"не содержал данных для записи."
+            )
+
+            await message.answer(
+                "⚠️ Не удалось добавить сделки. "
+                "Проверьте формат."
+            )
+
 
     except json.JSONDecodeError as e:
-        print(f"Ошибка парсинга JSON: {e}")
-        await bot.send_message(ADMIN_ID, f"❌ Ошибка JSON: {e}")
+
+        print(
+            f"Ошибка парсинга JSON: {e}"
+        )
+
+        await bot.send_message(
+            ADMIN_ID,
+            f"❌ Ошибка JSON: {e}"
+        )
+
+
     except Exception as e:
-        print(f"Ошибка: {e}")
-        await bot.send_message(ADMIN_ID, f"❌ Ошибка обработки: {e}")
+
+        print(
+            f"Ошибка: {e}"
+        )
+
+        await bot.send_message(
+            ADMIN_ID,
+            f"❌ Ошибка обработки: {e}"
+        )
