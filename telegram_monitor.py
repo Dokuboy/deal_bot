@@ -3,6 +3,7 @@ import re
 import asyncio
 import logging
 import unicodedata
+import hashlib
 
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
@@ -270,6 +271,33 @@ STOP_WORDS = [
     "database",
     "api integration",
 ]
+
+
+# ============================================================
+# ЗАЩИТА ОТ ДУБЛИКАТОВ (ПО ТЕКСТУ + ОТПРАВИТЕЛЮ)
+# ============================================================
+
+# Множество для хранения хешей уже отправленных сообщений
+# Ключ: (sender_id, text_hash)
+sent_texts = set()
+
+
+def get_text_hash(text: str) -> str:
+    """
+    Создаёт хеш текста для сравнения.
+    Нормализует текст (убирает пробелы, приводит к нижнему регистру).
+    """
+    if not text:
+        return ""
+    
+    # Нормализуем текст
+    normalized = normalize_text_for_filter(text)
+    
+    # Убираем лишние пробелы
+    normalized = ' '.join(normalized.split())
+    
+    # Создаём хеш
+    return hashlib.md5(normalized.encode()).hexdigest()
 
 
 # ============================================================
@@ -558,13 +586,46 @@ async def monitor_message(event):
             return
 
 
+        # ============================================================
+        # ПРОВЕРКА НА ДУБЛИКАТ ПО ТЕКСТУ + ОТПРАВИТЕЛЮ
+        # ============================================================
+
+        # Получаем ID отправителя
+        sender_id = None
+        if sender:
+            sender_id = getattr(sender, "id", None)
+
+        # Если не удалось получить ID отправителя — пропускаем проверку
+        if sender_id:
+            text_hash = get_text_hash(message_text)
+            unique_key = (sender_id, text_hash)
+
+            if unique_key in sent_texts:
+                print(
+                    f"⏭️ Дубликат текста от того же отправителя пропущен: "
+                    f"отправитель {sender_id}, "
+                    f"хеш {text_hash[:8]}..."
+                )
+                return
+
+            # Добавляем в список отправленных
+            sent_texts.add(unique_key)
+
+            # Ограничиваем размер множества (чтобы не переполнить память)
+            if len(sent_texts) > 10000:
+                # Удаляем 1000 старых записей
+                for _ in range(1000):
+                    if sent_texts:
+                        sent_texts.pop()
+                print("🧹 Очищено 1000 старых записей дубликатов")
+
+
         # ----------------------------------------------------
         # ИНФОРМАЦИЯ ОБ ОТПРАВИТЕЛЕ
         # ----------------------------------------------------
 
         sender_name = "Неизвестно"
         sender_username = None
-        sender_id = None
 
 
         if sender:
@@ -598,13 +659,6 @@ async def monitor_message(event):
             sender_username = getattr(
                 sender,
                 "username",
-                None
-            )
-
-
-            sender_id = getattr(
-                sender,
-                "id",
                 None
             )
 
