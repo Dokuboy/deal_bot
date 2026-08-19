@@ -612,65 +612,44 @@ async def monitor_message(event):
                 f"{chat_title}"
             )
 
+            # ====================================================
+            # ОТПРАВЛЯЕМ ТЕКСТ СООБЩЕНИЯ, А НЕ ТОЛЬКО УВЕДОМЛЕНИЕ
+            # ====================================================
 
-            notice = (
-                "🔒 Найдено подходящее сообщение "
-                "в защищённом чате\n\n"
-
-                f"📍 Источник: {chat_title}\n"
-                f"👤 Отправитель: {sender_name}\n"
-            )
-
+            # Формируем текст сообщения
+            full_text = f"📩 НОВОЕ СООБЩЕНИЕ (защищённый чат)\n\n"
+            full_text += f"📍 Источник: {chat_title}\n"
+            full_text += f"👤 Отправитель: {sender_name}\n"
 
             if sender_username:
-
-                notice += (
-                    f"🔹 Username: "
-                    f"@{sender_username}\n"
-                )
-
+                full_text += f"🔹 Username: @{sender_username}\n"
 
             if sender_id:
+                full_text += f"🆔 Sender ID: {sender_id}\n"
 
-                notice += (
-                    f"🆔 Sender ID: "
-                    f"{sender_id}\n"
-                )
+            full_text += f"🆔 Message ID: {event.id}\n"
+            full_text += f"🔑 Ключи: {', '.join(matched_words[:10])}\n\n"
 
+            # ДОБАВЛЯЕМ САМ ТЕКСТ СООБЩЕНИЯ
+            full_text += "=" * 50 + "\n\n"
+            full_text += message_text  # ← САМО СООБЩЕНИЕ
 
-            notice += (
-                f"🆔 Message ID: "
-                f"{event.id}\n"
-
-                f"🔑 Ключи: "
-                f"{', '.join(matched_words[:10])}"
-            )
-
-
-            # Если чат публичный —
-            # добавляем ссылку на оригинал.
+            # Если чат публичный — добавляем ссылку
             if chat_username:
-
-                notice += (
-                    "\n\n"
-                    "🔗 Открыть оригинал:\n"
-
-                    f"https://t.me/"
-                    f"{chat_username}/"
-                    f"{event.id}"
+                full_text += (
+                    f"\n\n🔗 Открыть оригинал:\n"
+                    f"https://t.me/{chat_username}/{event.id}"
                 )
 
-
-            await client.send_message(
-                destination_peer,
-                notice
-            )
-
-
-            print(
-                "📨 Уведомление отправлено "
-                "в fresh offers"
-            )
+            # Отправляем текст в fresh offers
+            try:
+                await client.send_message(
+                    destination_peer,
+                    full_text
+                )
+                print("📨 Текст сообщения отправлен в fresh offers")
+            except Exception as e:
+                print(f"❌ Ошибка отправки текста: {e}")
 
 
         except Exception as e:
