@@ -108,13 +108,18 @@ async def run_telethon_monitor():
     ]
     
     # ============================================================
-    # ИСПОЛЬЗУЕМ ФАЙЛ СЕССИИ (а не строку)
+    # ЗАЩИТА ОТ ДУБЛИКАТОВ
     # ============================================================
     
-    # Проверяем, есть ли файл сессии в Secret Files
-    session_file = 'telethon.session'  # Имя файла, который загрузили на Render
+    # Множество для хранения ID уже отправленных сообщений
+    sent_messages = set()
     
-    # Если файла нет, пробуем использовать другой вариант
+    # ============================================================
+    # ИСПОЛЬЗУЕМ ФАЙЛ СЕССИИ
+    # ============================================================
+    
+    session_file = 'telethon.session'
+    
     if not os.path.exists(session_file):
         logging.warning(f"⚠️ Файл {session_file} не найден, пробую создать новую сессию")
         client = TelegramClient("sharminator_user", API_ID, API_HASH)
@@ -135,10 +140,32 @@ async def run_telethon_monitor():
             if not matched:
                 return
             
+            # ============================================================
+            # ПРОВЕРКА НА ДУБЛИКАТ
+            # ============================================================
+            
+            msg_key = (event.chat_id, event.id)
+            
+            if msg_key in sent_messages:
+                print(f"⏭️ Дубликат пропущен: {msg_key}")
+                return
+            
+            sent_messages.add(msg_key)
+            
+            # Ограничиваем размер множества
+            if len(sent_messages) > 10000:
+                for _ in range(1000):
+                    if sent_messages:
+                        sent_messages.pop()
+                print("🧹 Очищено 1000 старых записей дубликатов")
+            
+            # ============================================================
+            # ИНФОРМАЦИЯ ОБ ОТПРАВИТЕЛЕ
+            # ============================================================
+            
             chat_title = getattr(chat, "title", "Unknown chat")
             chat_username = getattr(chat, "username", None)
             
-            # Собираем информацию об отправителе
             sender_name = "Неизвестно"
             sender_username = "Нет username"
             sender_id = "Неизвестно"
@@ -165,15 +192,17 @@ async def run_telethon_monitor():
             # Отправляем через Telethon (в fresh offers)
             try:
                 await client.send_message(DESTINATION_CHAT, full_text)
-                print(f"📨 Отправлено сообщение из {chat_title}")
+                print(f"📨 Отправлено из {chat_title} (ID: {event.id})")
             except Exception as e:
                 print(f"❌ Ошибка отправки: {e}")
+                # Если ошибка — убираем из отправленных, чтобы попробовать позже
+                sent_messages.discard(msg_key)
             
         except Exception as e:
             logging.exception(f"❌ Ошибка мониторинга: {e}")
     
     await client.start()
-    logging.info("✅ Telethon Monitor запущен")
+    logging.info("✅ Telethon Monitor запущен (с защитой от дубликатов)")
     logging.info(f"👀 Отслеживаемые чаты: {TARGET_CHATS}")
     await client.run_until_disconnected()
 
