@@ -104,16 +104,20 @@ async def run_telethon_monitor():
         "цена за лид", "выплата за лид",
     ]
     
-    # Проверяем сессию
-    SESSION_STRING = os.environ.get("TELEGRAM_SESSION", None)
+    # ============================================================
+    # ИСПОЛЬЗУЕМ ФАЙЛ СЕССИИ (а не строку)
+    # ============================================================
     
-    if SESSION_STRING:
-        from telethon.sessions import StringSession
-        client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
-        logging.info("✅ Используем сохранённую сессию")
-    else:
+    # Проверяем, есть ли файл сессии в Secret Files
+    session_file = 'telethon.session'  # Имя файла, который загрузили на Render
+    
+    # Если файла нет, пробуем использовать другой вариант
+    if not os.path.exists(session_file):
+        logging.warning(f"⚠️ Файл {session_file} не найден, пробую создать новую сессию")
         client = TelegramClient("sharminator_user", API_ID, API_HASH)
-        logging.info("✅ Создаём новую сессию (потребуется код подтверждения)")
+    else:
+        logging.info(f"✅ Используем файл сессии: {session_file}")
+        client = TelegramClient(session_file, API_ID, API_HASH)
     
     @client.on(events.NewMessage(chats=TARGET_CHATS, incoming=True))
     async def monitor_message(event):
