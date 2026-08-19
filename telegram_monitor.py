@@ -2,6 +2,7 @@ import os
 import re
 import asyncio
 import logging
+import unicodedata
 
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
@@ -283,7 +284,33 @@ client = TelegramClient(
 
 
 # ============================================================
-# НОРМАЛИЗАЦИЯ
+# НОРМАЛИЗАЦИЯ ТЕКСТА (ДЛЯ ФИЛЬТРАЦИИ)
+# ============================================================
+
+def normalize_text_for_filter(text: str) -> str:
+    """
+    Приводит текст к нормальному виду для фильтрации:
+    - убирает спецсимволы (жирный шрифт, курсив и т.д.)
+    - приводит к нижнему регистру
+    - убирает лишние пробелы
+    """
+    if not text:
+        return ""
+    
+    # Нормализуем Unicode (преобразуем 𝘿𝙖𝙩𝙖𝙗𝙖𝙨𝙚𝙨 → Database)
+    normalized = unicodedata.normalize('NFKC', text)
+    
+    # Убираем эмодзи и спецсимволы (оставляем только буквы, цифры, пробелы, знаки препинания)
+    cleaned = re.sub(r'[^\w\s.,!?-]', ' ', normalized)
+    
+    # Приводим к нижнему регистру и убираем лишние пробелы
+    cleaned = ' '.join(cleaned.lower().split())
+    
+    return cleaned
+
+
+# ============================================================
+# НОРМАЛИЗАЦИЯ (старая, для ключевых слов)
 # ============================================================
 
 def normalize_text(text: str) -> str:
@@ -489,13 +516,14 @@ async def monitor_message(event):
         # ПРОВЕРКА НА СТОП-СЛОВА (МИНУС-СЛОВА)
         # ----------------------------------------------------
 
-        text_lower = message_text.lower()
+        # Нормализуем текст для проверки стоп-слов
+        normalized_text = normalize_text_for_filter(message_text)
 
         stop_word_found = False
 
         for stop_word in STOP_WORDS:
 
-            if stop_word.lower() in text_lower:
+            if stop_word.lower() in normalized_text:
 
                 print(
                     f"⏭️ Пропущено (стоп-слово '{stop_word}') "
@@ -505,7 +533,6 @@ async def monitor_message(event):
                 stop_word_found = True
 
                 break
-
 
         if stop_word_found:
             return
@@ -711,10 +738,17 @@ async def monitor_message(event):
 
         except Exception as e:
 
-            logger.exception(
-                f"❌ Ошибка пересылки "
-                f"в fresh offers: {e}"
-            )
+            # Игнорируем ошибки "invalid message ID"
+            if "invalid" in str(e).lower() or "can't do that operation" in str(e).lower():
+                print(
+                    f"⏭️ Пропущено (сообщение удалено или недоступно) "
+                    f"из {chat_title}"
+                )
+            else:
+                logger.exception(
+                    f"❌ Ошибка пересылки "
+                    f"в fresh offers: {e}"
+                )
 
 
     except Exception as e:
