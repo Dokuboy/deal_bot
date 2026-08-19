@@ -261,7 +261,13 @@ STOP_WORDS = [
     "fresh",
     "bank",
     "documents",
-    # Добавляй сюда любые слова, которые должны игнорироваться
+    "retention",
+    "signals",
+    "tools",
+    "recovery",
+    "registration",
+    "database",
+    "api integration",
 ]
 
 
