@@ -51,7 +51,10 @@ async def run_telethon_monitor():
     
     DESTINATION_CHAT = -5462678076  # fresh offers
     
-    # КЛЮЧЕВЫЕ СЛОВА
+    # ============================================================
+    # КЛЮЧЕВЫЕ СЛОВА (для отбора сообщений)
+    # ============================================================
+    
     KEYWORDS = [
         "looking for", "looking 4", "searching for", "searching",
         "seeking", "wanted", "lf", "wtb",
@@ -108,10 +111,23 @@ async def run_telethon_monitor():
     ]
     
     # ============================================================
+    # МИНУС-СЛОВА (игнорировать сообщения с этими словами)
+    # ============================================================
+    
+    STOP_WORDS = [
+        # 👇 ДОБАВЛЯЙ СВОИ СТОП-СЛОВА СЮДА
+        "data", "api", "integration", "recovery", "chargeback",
+        "refund", "dispute", "fraud", "scam", "spam",
+        "казино", "casino", "гемблинг", "gambling",
+        "крипта", "crypto", "bitcoin", "btc", "eth",
+        "инвестиции", "investment", "инвест",
+        # Удали или дополни этот список по своему усмотрению
+    ]
+    
+    # ============================================================
     # ЗАЩИТА ОТ ДУБЛИКАТОВ
     # ============================================================
     
-    # Множество для хранения ID уже отправленных сообщений
     sent_messages = set()
     
     # ============================================================
@@ -134,8 +150,27 @@ async def run_telethon_monitor():
             sender = await event.get_sender()
             message_text = event.message.text or ""
             
-            # Проверка ключевых слов
+            # ============================================================
+            # ПРОВЕРКА НА МИНУС-СЛОВА
+            # ============================================================
+            
             text_lower = message_text.lower()
+            
+            # Если есть стоп-слово — игнорируем сообщение
+            stop_word_found = False
+            for stop_word in STOP_WORDS:
+                if stop_word.lower() in text_lower:
+                    print(f"⏭️ Пропущено (стоп-слово '{stop_word}'): {message_text[:50]}...")
+                    stop_word_found = True
+                    break
+            
+            if stop_word_found:
+                return
+            
+            # ============================================================
+            # ПРОВЕРКА НА КЛЮЧЕВЫЕ СЛОВА
+            # ============================================================
+            
             matched = any(kw.lower() in text_lower for kw in KEYWORDS)
             if not matched:
                 return
@@ -152,7 +187,6 @@ async def run_telethon_monitor():
             
             sent_messages.add(msg_key)
             
-            # Ограничиваем размер множества
             if len(sent_messages) > 10000:
                 for _ in range(1000):
                     if sent_messages:
@@ -195,15 +229,15 @@ async def run_telethon_monitor():
                 print(f"📨 Отправлено из {chat_title} (ID: {event.id})")
             except Exception as e:
                 print(f"❌ Ошибка отправки: {e}")
-                # Если ошибка — убираем из отправленных, чтобы попробовать позже
                 sent_messages.discard(msg_key)
             
         except Exception as e:
             logging.exception(f"❌ Ошибка мониторинга: {e}")
     
     await client.start()
-    logging.info("✅ Telethon Monitor запущен (с защитой от дубликатов)")
+    logging.info("✅ Telethon Monitor запущен (с защитой от дубликатов и стоп-слов)")
     logging.info(f"👀 Отслеживаемые чаты: {TARGET_CHATS}")
+    logging.info(f"🚫 Стоп-слова: {len(STOP_WORDS)}")
     await client.run_until_disconnected()
 
 # ============================================================
@@ -211,10 +245,8 @@ async def run_telethon_monitor():
 # ============================================================
 
 async def main():
-    # Запускаем Telethon-монитор в фоновом режиме
     asyncio.create_task(run_telethon_monitor())
     
-    # Запускаем Aiogram-бота
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(router)
@@ -222,12 +254,10 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    # Запускаем Flask-сервер в отдельном потоке
     web_thread = threading.Thread(target=run_web)
     web_thread.start()
     logging.info("Фиктивный веб-сервер запущен на порту 10000")
     
-    # Запускаем основную функцию бота
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
