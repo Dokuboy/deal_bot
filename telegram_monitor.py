@@ -241,6 +241,31 @@ KEYWORDS = [
 
 
 # ============================================================
+# МИНУС-СЛОВА (СТОП-СЛОВА)
+# ============================================================
+
+STOP_WORDS = [
+    "payment",
+    "platform",
+    "stripe",
+    "paypal",
+    "wise",
+    "square",
+    "sumup",
+    "payoneer",
+    "revolut",
+    "geegpay",
+    "visanet",
+    "authorize.net",
+    "flutterwave",
+    "fresh",
+    "bank",
+    "documents",
+    # Добавляй сюда любые слова, которые должны игнорироваться
+]
+
+
+# ============================================================
 # TELETHON CLIENT
 # ============================================================
 
@@ -455,7 +480,33 @@ async def monitor_message(event):
 
 
         # ----------------------------------------------------
-        # ФИЛЬТР
+        # ПРОВЕРКА НА СТОП-СЛОВА (МИНУС-СЛОВА)
+        # ----------------------------------------------------
+
+        text_lower = message_text.lower()
+
+        stop_word_found = False
+
+        for stop_word in STOP_WORDS:
+
+            if stop_word.lower() in text_lower:
+
+                print(
+                    f"⏭️ Пропущено (стоп-слово '{stop_word}') "
+                    f"[{chat_title}]: {message_text[:80]}..."
+                )
+
+                stop_word_found = True
+
+                break
+
+
+        if stop_word_found:
+            return
+
+
+        # ----------------------------------------------------
+        # ФИЛЬТР ПО КЛЮЧЕВЫМ СЛОВАМ
         # ----------------------------------------------------
 
         matched_words = find_keywords(
