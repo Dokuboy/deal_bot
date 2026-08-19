@@ -44,6 +44,9 @@ async def run_telethon_monitor():
         -1001961863956,  # FX💬Affiliation | UTIP Technologies
         -1001787758104,  # FX💬Аффилиация | TrafficIcons
         -1002295936547,  # Buy CRG / CPL Requests Only
+        -1001339038710,  # Mobster
+        -1001293599219,  # BLACK CHAT
+        -1001337397906,  # Forex world
     ]
     
     DESTINATION_CHAT = -5462678076  # fresh offers
