@@ -46,7 +46,7 @@ async def run_telethon_monitor():
         -1002295936547,  # Buy CRG / CPL Requests Only
     ]
     
-    DESTINATION_CHAT = -5394290236  # fresh offers
+    DESTINATION_CHAT = -5462678076  # fresh offers
     
     # КЛЮЧЕВЫЕ СЛОВА
     KEYWORDS = [
