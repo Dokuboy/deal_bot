@@ -269,6 +269,8 @@ STOP_WORDS = [
     "recovery",
     "registration",
     "database",
+    "did global",
+    "BlackHat",
     "api integration",
 ]
 
