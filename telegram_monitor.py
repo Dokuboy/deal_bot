@@ -254,7 +254,7 @@ STOP_WORDS = [
     "recovery", "registration", "database", "api integration",
     "igaming", "платформа", "admin", "services", "ru",
     "чардж", "charge", "рекавери", "база", "варм",
-    "холодка", "реги", "regs", "depositors",
+    "холодка", "реги", "regs", "depositors", "BlackHat",
 ]
 
 
