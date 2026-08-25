@@ -291,6 +291,11 @@ STOP_WORDS = [
     "дроп",
     "domains",
     "подработка",
+    "serm",
+    "orm",
+    "blackhat",
+    "hosting",
+    "ру",
 ]
 
 
