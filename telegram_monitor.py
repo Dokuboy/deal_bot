@@ -296,6 +296,11 @@ STOP_WORDS = [
     "blackhat",
     "hosting",
     "ру",
+    "реквизиты",
+    "рассылка",
+    "видео",
+    "max",
+    "provider",
 ]
 
 
