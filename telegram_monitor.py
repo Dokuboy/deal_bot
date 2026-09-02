@@ -42,6 +42,7 @@ TARGET_CHATS = [
     -1001339038710,  # Mobster
     -1001293599219,  # BLACK CHAT
     -1001337397906,  # Forex world
+    -1001977656258,  # Whiteaffiliate
 ]
 
 
