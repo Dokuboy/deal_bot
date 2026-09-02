@@ -42,7 +42,7 @@ TARGET_CHATS = [
     -1001339038710,  # Mobster
     -1001293599219,  # BLACK CHAT
     -1001337397906,  # Forex world
-    -1001977656258,  # Whiteaffiliate
+    -1001977656258,  # whiteaffiliate
 ]
 
 
@@ -309,8 +309,8 @@ STOP_WORDS = [
     "телефония",
     "деньги",
     "вотсап",
+    "Подработка",
 ]
-
 
 # ============================================================
 # ЗАЩИТА ОТ ДУБЛИКАТОВ (ПО ТЕКСТУ + ОТПРАВИТЕЛЮ)
@@ -701,6 +701,16 @@ async def monitor_message(event):
                 None
             )
 
+            # Для защищённых чатов пробуем получить username из других источников
+            if not sender_username and hasattr(event.message, 'sender'):
+                sender_username = getattr(event.message.sender, 'username', None)
+
+            if not sender_username and hasattr(event.message, 'fwd_from'):
+                sender_username = getattr(event.message.fwd_from, 'username', None)
+
+            if sender_username:
+                print(f"🔍 Найден username: @{sender_username}")
+
 
         # ----------------------------------------------------
         # ЛОГИ
@@ -800,6 +810,7 @@ async def monitor_message(event):
 
             if sender_username:
                 full_text += f"🔹 Username: @{sender_username}\n"
+                full_text += f"👤 Профиль: https://t.me/{sender_username}\n"
 
             if sender_id:
                 full_text += f"🆔 Sender ID: {sender_id}\n"
