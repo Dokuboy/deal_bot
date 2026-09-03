@@ -244,80 +244,55 @@ KEYWORDS = [
 
 
 # ============================================================
-# МИНУС-СЛОВА (СТОП-СЛОВА)
+# МИНУС-СЛОВА (СТОП-СЛОВА) — ЗАГРУЗКА ИЗ ФАЙЛА
 # ============================================================
 
-STOP_WORDS = [
-    "payment",
-    "platform",
-    "stripe",
-    "paypal",
-    "wise",
-    "square",
-    "sumup",
-    "payoneer",
-    "revolut",
-    "geegpay",
-    "visanet",
-    "authorize.net",
-    "flutterwave",
-    "fresh",
-    "bank",
-    "documents",
-    "retention",
-    "signals",
-    "tools",
-    "recovery",
-    "registration",
-    "database",
-    "api integration",
-    "igaming",
-    "платформа",
-    "admin",
-    "services",
-    "ru",
-    "чардж",
-    "charge",
-    "рекавери",
-    "база",
-    "варм",
-    "холодка",
-    "реги",
-    "regs",
-    "depositors",
-    "osys",
-    "reputation",
-    "работа",
-    "дроповод",
-    "дроп",
-    "domains",
-    "подработка",
-    "serm",
-    "orm",
-    "blackhat",
-    "hosting",
-    "ру",
-    "реквизиты",
-    "рассылка",
-    "видео",
-    "max",
-    "provider",
-    "sms",
-    "data",
-    "бан",
-    "accounts",
-    "телефония",
-    "деньги",
-    "вотсап",
-    "Подработка",
-    "Паспорт",
-    "Обмен",
-    "Обучение",
-    "Content",
-    "воркер",
-    "vip",
-    "игроки",
-]
+STOP_WORDS_FILE = "stop_words.txt"
+
+def load_stop_words():
+    """Загружает стоп-слова из файла"""
+    if os.path.exists(STOP_WORDS_FILE):
+        try:
+            with open(STOP_WORDS_FILE, "r", encoding="utf-8") as f:
+                return [line.strip().lower() for line in f if line.strip()]
+        except:
+            return []
+    return []
+
+def save_stop_words(words):
+    """Сохраняет стоп-слова в файл"""
+    try:
+        with open(STOP_WORDS_FILE, "w", encoding="utf-8") as f:
+            for word in sorted(set(words)):
+                f.write(word.lower() + "\n")
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка сохранения стоп-слов: {e}")
+        return False
+
+STOP_WORDS = load_stop_words()
+
+# Если файла нет — создаём с базовым списком
+if not STOP_WORDS:
+    STOP_WORDS = [
+        "payment", "platform", "stripe", "paypal", "wise",
+        "square", "sumup", "payoneer", "revolut", "geegpay",
+        "visanet", "authorize.net", "flutterwave", "fresh",
+        "bank", "documents", "retention", "signals", "tools",
+        "recovery", "registration", "database", "api integration",
+        "igaming", "платформа", "admin", "services", "ru",
+        "чардж", "charge", "рекавери", "база", "варм",
+        "холодка", "реги", "regs", "depositors", "osys",
+        "reputation", "работа", "дроповод", "дроп", "domains",
+        "подработка", "serm", "orm", "blackhat", "hosting",
+        "ру", "реквизиты", "рассылка", "видео", "max",
+        "provider", "sms", "data", "бан", "accounts",
+        "телефония", "деньги", "вотсап", "Подработка",
+        "Паспорт", "Обмен", "Обучение", "Content", "воркер",
+        "vip", "игроки",
+    ]
+    save_stop_words(STOP_WORDS)
+
 
 # ============================================================
 # ЗАЩИТА ОТ ДУБЛИКАТОВ (ПО ТЕКСТУ + ОТПРАВИТЕЛЮ)
@@ -342,7 +317,7 @@ def get_text_hash(text: str) -> str:
     # Убираем лишние пробелы
     normalized = ' '.join(normalized.split())
     
-    # Создаём хеш
+    # Создаем хеш
     return hashlib.md5(normalized.encode()).hexdigest()
 
 
@@ -358,13 +333,14 @@ client = TelegramClient(
 
 
 # ============================================================
-# НОРМАЛИЗАЦИЯ ТЕКСТА (ДЛЯ ФИЛЬТРАЦИИ)
+# НОРМАЛИЗАЦИЯ ТЕКСТА (УЛУЧШЕННАЯ)
 # ============================================================
 
 def normalize_text_for_filter(text: str) -> str:
     """
     Приводит текст к нормальному виду для фильтрации:
-    - убирает спецсимволы (жирный шрифт, курсив и т.д.)
+    - убирает эмодзи и спецсимволы
+    - убирает жирный шрифт, курсив и т.д.
     - приводит к нижнему регистру
     - убирает лишние пробелы
     """
@@ -374,11 +350,14 @@ def normalize_text_for_filter(text: str) -> str:
     # Нормализуем Unicode (преобразуем 𝘿𝙖𝙩𝙖𝙗𝙖𝙨𝙚𝙨 → Database)
     normalized = unicodedata.normalize('NFKC', text)
     
-    # Убираем эмодзи и спецсимволы (оставляем только буквы, цифры, пробелы, знаки препинания)
-    cleaned = re.sub(r'[^\w\s.,!?-]', ' ', normalized)
+    # Убираем все символы, кроме букв, цифр, пробелов и базовых знаков препинания
+    cleaned = re.sub(r'[^\w\s]', ' ', normalized)
     
-    # Приводим к нижнему регистру и убираем лишние пробелы
-    cleaned = ' '.join(cleaned.lower().split())
+    # Приводим к нижнему регистру
+    cleaned = cleaned.lower()
+    
+    # Убираем лишние пробелы
+    cleaned = ' '.join(cleaned.split())
     
     return cleaned
 
@@ -536,7 +515,7 @@ async def monitor_message(event):
     try:
 
         # ----------------------------------------------------
-        # Проверяем, что это один из наших 6 чатов
+        # Проверяем, что это один из наших чатов
         # ----------------------------------------------------
 
         if event.chat_id not in TARGET_CHATS:
@@ -592,6 +571,9 @@ async def monitor_message(event):
 
         # Нормализуем текст для проверки стоп-слов
         normalized_text = normalize_text_for_filter(message_text)
+        
+        # Отладка (можно убрать после проверки)
+        print(f"🔍 Нормализованный текст: {normalized_text[:100]}...")
 
         stop_word_found = False
 
