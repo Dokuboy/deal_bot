@@ -591,6 +591,24 @@ async def monitor_message(event):
 
         sender = await event.get_sender()
 
+        # ============================================================
+        # ДИАГНОСТИКА
+        # ============================================================
+
+        # Получаем username сразу после sender
+        sender_username = getattr(sender, "username", None) if sender else None
+
+        print(f"🔍 [DIAG] sender: {sender}")
+        print(f"🔍 [DIAG] sender_username: {sender_username}")
+        print(f"🔍 [DIAG] sender_id: {getattr(sender, 'id', None) if sender else None}")
+        if hasattr(event.message, 'sender'):
+            print(f"🔍 [DIAG] event.message.sender: {event.message.sender}")
+        else:
+            print(f"🔍 [DIAG] event.message.sender: Нет")
+
+        # ============================================================
+        # КОНЕЦ ДИАГНОСТИКИ
+        # ============================================================
 
         chat_title = getattr(
             chat,
