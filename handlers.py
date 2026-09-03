@@ -395,6 +395,12 @@ async def auto_collect_messages(message: Message):
 async def parse_deals_with_ai(message: Message):
 
     # ========================================================
+    # ДИАГНОСТИКА — ВСЕГДА ВЫВОДИТ, ЧТО ПРИШЛО
+    # ========================================================
+
+    print(f"🔍 [DIAG] Получен текст: {message.text[:100]}...")
+
+    # ========================================================
     # НОВАЯ ЗАЩИТА ДЛЯ TELETHON
     #
     # Если сообщение было ПЕРЕСЛАНО в SHARMINATOR,
@@ -424,6 +430,7 @@ async def parse_deals_with_ai(message: Message):
 
     # Игнорируем команды
     if user_text.startswith("/"):
+        print(f"⏭️ [DIAG] Сообщение является командой, пропускаем")
         return
 
 
@@ -456,11 +463,20 @@ async def parse_deals_with_ai(message: Message):
         "middle"
     ]
 
-    if not any(
-        kw in user_text
-        for kw in keywords
-    ):
+    print(f"🔍 [DIAG] Проверка фильтра ключевых слов...")
+
+    matched = False
+    for kw in keywords:
+        if kw in user_text:
+            matched = True
+            print(f"🔍 [DIAG] Найдено ключевое слово: {kw}")
+            break
+
+    if not matched:
+        print(f"⏭️ [DIAG] Нет ключевых слов, пропускаем")
         return
+
+    print(f"✅ [DIAG] Фильтр пройден, отправляю в DeepSeek")
 
 
     await bot.send_message(
@@ -513,6 +529,8 @@ async def parse_deals_with_ai(message: Message):
         # ====================================================
         # ЗАПРОС В DEEPSEEK
         # ====================================================
+
+        print(f"🔍 [DIAG] Отправляю запрос в DeepSeek...")
 
         response = client.chat.completions.create(
             model="deepseek-chat",
