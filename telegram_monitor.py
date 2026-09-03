@@ -979,79 +979,50 @@ async def monitor_message(event):
         source_peer = await event.get_input_chat()
 
 
-        # ----------------------------------------------------
-        # ПЕРЕСЫЛКА
-        # ----------------------------------------------------
+        # ============================================================
+        # ВСЕГДА ОТПРАВЛЯТЬ ТЕКСТОМ (а не пересылать)
+        # ============================================================
 
+        print(
+            f"📨 Отправляю текстом в fresh offers "
+            f"из {chat_title}"
+        )
+
+        # Формируем текст сообщения с информацией об отправителе
+        full_text = f"📩 НОВОЕ СООБЩЕНИЕ\n\n"
+        full_text += f"📍 Источник: {chat_title}\n"
+        full_text += f"👤 Отправитель: {sender_name}\n"
+
+        if sender_username:
+            full_text += f"🔹 Username: @{sender_username}\n"
+            full_text += f"👤 Профиль: https://t.me/{sender_username}\n"
+
+        if sender_id:
+            full_text += f"🆔 Sender ID: {sender_id}\n"
+
+        full_text += f"🆔 Message ID: {event.id}\n"
+        full_text += f"🔑 Ключи: {', '.join(matched_words[:10])}\n\n"
+
+        # ДОБАВЛЯЕМ САМ ТЕКСТ СООБЩЕНИЯ
+        full_text += "=" * 50 + "\n\n"
+        full_text += message_text  # ← САМО СООБЩЕНИЕ
+
+        # Если чат публичный — добавляем ссылку
+        if chat_username:
+            full_text += (
+                f"\n\n🔗 Открыть оригинал:\n"
+                f"https://t.me/{chat_username}/{event.id}"
+            )
+
+        # Отправляем текст в fresh offers
         try:
-
-            await client.forward_messages(
+            await client.send_message(
                 destination_peer,
-                event.id,
-                from_peer=source_peer
+                full_text
             )
-
-
-            print(
-                f"✅ Переслано в fresh offers "
-                f"из {chat_title}"
-            )
-
-
-        # ----------------------------------------------------
-        # ЕСЛИ В ЧАТЕ ЗАПРЕЩЕНА ПЕРЕСЫЛКА ИЛИ ОШИБКА
-        # ----------------------------------------------------
-
-        except Exception as e:
-
-            # Проверяем, что это не ошибка "invalid message ID"
-            if "invalid" in str(e).lower() or "can't do that operation" in str(e).lower():
-                print(
-                    f"⏭️ Пропущено (сообщение удалено или недоступно) "
-                    f"из {chat_title}"
-                )
-                return
-
-            # В любом другом случае — отправляем текст с информацией об отправителе
-            print(
-                f"⚠️ Пересылка не удалась, отправляю текстом: {e}"
-            )
-
-            # Формируем текст сообщения с информацией об отправителе
-            full_text = f"📩 НОВОЕ СООБЩЕНИЕ\n\n"
-            full_text += f"📍 Источник: {chat_title}\n"
-            full_text += f"👤 Отправитель: {sender_name}\n"
-
-            if sender_username:
-                full_text += f"🔹 Username: @{sender_username}\n"
-                full_text += f"👤 Профиль: https://t.me/{sender_username}\n"
-
-            if sender_id:
-                full_text += f"🆔 Sender ID: {sender_id}\n"
-
-            full_text += f"🆔 Message ID: {event.id}\n"
-            full_text += f"🔑 Ключи: {', '.join(matched_words[:10])}\n\n"
-
-            # ДОБАВЛЯЕМ САМ ТЕКСТ СООБЩЕНИЯ
-            full_text += "=" * 50 + "\n\n"
-            full_text += message_text  # ← САМО СООБЩЕНИЕ
-
-            # Если чат публичный — добавляем ссылку
-            if chat_username:
-                full_text += (
-                    f"\n\n🔗 Открыть оригинал:\n"
-                    f"https://t.me/{chat_username}/{event.id}"
-                )
-
-            # Отправляем текст в fresh offers
-            try:
-                await client.send_message(
-                    destination_peer,
-                    full_text
-                )
-                print("📨 Текст сообщения отправлен в fresh offers")
-            except Exception as e2:
-                print(f"❌ Ошибка отправки текста: {e2}")
+            print("📨 Текст сообщения отправлен в fresh offers")
+        except Exception as e2:
+            print(f"❌ Ошибка отправки текста: {e2}")
 
 
     except Exception as e:
