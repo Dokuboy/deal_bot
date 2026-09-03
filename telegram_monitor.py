@@ -244,37 +244,10 @@ KEYWORDS = [
 
 
 # ============================================================
-# МИНУС-СЛОВА (СТОП-СЛОВА) — ЗАГРУЗКА ИЗ ФАЙЛА
+# МИНУС-СЛОВА (СТОП-СЛОВА) — ТОЛЬКО СПИСОК
 # ============================================================
 
-STOP_WORDS_FILE = "stop_words.txt"
-
-def load_stop_words():
-    """Загружает стоп-слова из файла"""
-    if os.path.exists(STOP_WORDS_FILE):
-        try:
-            with open(STOP_WORDS_FILE, "r", encoding="utf-8") as f:
-                return [line.strip().lower() for line in f if line.strip()]
-        except:
-            return []
-    return []
-
-def save_stop_words(words):
-    """Сохраняет стоп-слова в файл"""
-    try:
-        with open(STOP_WORDS_FILE, "w", encoding="utf-8") as f:
-            for word in sorted(set(words)):
-                f.write(word.lower() + "\n")
-        return True
-    except Exception as e:
-        print(f"❌ Ошибка сохранения стоп-слов: {e}")
-        return False
-
-STOP_WORDS = load_stop_words()
-
-# Если файла нет — создаём с базовым списком
-if not STOP_WORDS:
-    STOP_WORDS = [
+STOP_WORDS = [
     "payment",
     "platform",
     "stripe",
@@ -351,8 +324,15 @@ if not STOP_WORDS:
     "агентские",
     "физ сим",
     "пополнение",
+    # === ВСЕ СКЛОНЕНИЯ (добавлены для надёжности) ===
+    "базы", "базу", "базе", "базой", "баз",
+    "аккаунт", "аккаунта", "аккаунту", "аккаунтом", "аккаунтах",
+    "фармы", "фармов", "фармам", "фармами", "фармах",
+    "доки", "доков", "докам", "доками", "доках",
+    "реферал", "рефералы", "реферала", "рефералов",
+    "трастовые", "трастовых", "трастовым", "трастовыми",
+    "выдача", "выдачи", "выдачу", "выдаче", "выдачей",
 ]
-    save_stop_words(STOP_WORDS)
 
 
 # ============================================================
