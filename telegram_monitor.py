@@ -778,22 +778,26 @@ async def monitor_message(event):
 
 
         # ----------------------------------------------------
-        # ЕСЛИ В ЧАТЕ ЗАПРЕЩЕНА ПЕРЕСЫЛКА
+        # ЕСЛИ В ЧАТЕ ЗАПРЕЩЕНА ПЕРЕСЫЛКА ИЛИ ОШИБКА
         # ----------------------------------------------------
 
-        except ChatForwardsRestrictedError:
+        except Exception as e:
 
+            # Проверяем, что это не ошибка "invalid message ID"
+            if "invalid" in str(e).lower() or "can't do that operation" in str(e).lower():
+                print(
+                    f"⏭️ Пропущено (сообщение удалено или недоступно) "
+                    f"из {chat_title}"
+                )
+                return
+
+            # В любом другом случае — отправляем текст с информацией об отправителе
             print(
-                f"🔒 В чате запрещена пересылка: "
-                f"{chat_title}"
+                f"⚠️ Пересылка не удалась, отправляю текстом: {e}"
             )
 
-            # ====================================================
-            # ОТПРАВЛЯЕМ ТЕКСТ СООБЩЕНИЯ, А НЕ ТОЛЬКО УВЕДОМЛЕНИЕ
-            # ====================================================
-
-            # Формируем текст сообщения
-            full_text = f"📩 НОВОЕ СООБЩЕНИЕ (защищённый чат)\n\n"
+            # Формируем текст сообщения с информацией об отправителе
+            full_text = f"📩 НОВОЕ СООБЩЕНИЕ\n\n"
             full_text += f"📍 Источник: {chat_title}\n"
             full_text += f"👤 Отправитель: {sender_name}\n"
 
@@ -825,23 +829,8 @@ async def monitor_message(event):
                     full_text
                 )
                 print("📨 Текст сообщения отправлен в fresh offers")
-            except Exception as e:
-                print(f"❌ Ошибка отправки текста: {e}")
-
-
-        except Exception as e:
-
-            # Игнорируем ошибки "invalid message ID"
-            if "invalid" in str(e).lower() or "can't do that operation" in str(e).lower():
-                print(
-                    f"⏭️ Пропущено (сообщение удалено или недоступно) "
-                    f"из {chat_title}"
-                )
-            else:
-                logger.exception(
-                    f"❌ Ошибка пересылки "
-                    f"в fresh offers: {e}"
-                )
+            except Exception as e2:
+                print(f"❌ Ошибка отправки текста: {e2}")
 
 
     except Exception as e:
