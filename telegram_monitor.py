@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import asyncio
 import logging
 import unicodedata
@@ -55,6 +56,33 @@ DESTINATION_TITLE = "fresh offers"
 
 # После запуска сюда будет записан реальный InputPeer
 destination_peer = None
+
+
+# ============================================================
+# ЧЁРНЫЙ СПИСОК
+# ============================================================
+
+BANNED_USERS_FILE = "banned_users.json"
+
+def load_banned_users():
+    if os.path.exists(BANNED_USERS_FILE):
+        try:
+            with open(BANNED_USERS_FILE, "r", encoding="utf-8") as f:
+                return set(json.load(f))
+        except:
+            return set()
+    return set()
+
+def save_banned_users(banned):
+    try:
+        with open(BANNED_USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(list(banned), f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка сохранения чёрного списка: {e}")
+        return False
+
+BANNED_USERS = load_banned_users()
 
 
 # ============================================================
@@ -809,6 +837,15 @@ async def monitor_message(event):
             return
 
 
+        # ----------------------------------------------------
+        # ЧЁРНЫЙ СПИСОК
+        # ----------------------------------------------------
+        
+        if event.sender_id in BANNED_USERS:
+            print(f"⏭️ Пропущено (в чёрном списке): {event.sender_id}")
+            return
+
+
         # Если сообщение прилетело в момент запуска,
         # а destination ещё не готов
         if destination_peer is None:
@@ -1117,6 +1154,79 @@ async def monitor_message(event):
 
 
 # ============================================================
+# ОБРАБОТКА ОТВЕТОВ "бан" / "ban" В FRESH OFFERS
+# ============================================================
+
+@client.on(events.NewMessage(chats=[DESTINATION_CHAT], incoming=True))
+async def handle_ban_command(event):
+    """
+    Слушает ответы в fresh offers.
+    Если ты отвечаешь на сообщение словом 'бан' или 'ban' —
+    автор оригинального сообщения добавляется в чёрный список.
+    Сообщение НЕ удаляется.
+    """
+    try:
+        text = (event.message.raw_text or "").strip().lower()
+
+        if text not in ["бан", "ban", "🚫", "❌"]:
+            return
+
+        # Проверяем, что это ответ на сообщение
+        reply_to = event.message.reply_to_msg_id
+        if not reply_to:
+            print("⏭️ Это не ответ на сообщение, пропускаем")
+            return
+
+        # Получаем оригинальное сообщение
+        try:
+            original_msg = await client.get_messages(DESTINATION_CHAT, ids=reply_to)
+        except Exception as e:
+            print(f"❌ Не удалось получить оригинальное сообщение: {e}")
+            return
+
+        if not original_msg or not original_msg.text:
+            print("⏭️ Оригинальное сообщение пустое")
+            return
+
+        # Ищем Sender ID в тексте
+        match = re.search(r"🆔 Sender ID: (\d+)", original_msg.text)
+        if not match:
+            print("⏭️ Sender ID не найден в сообщении")
+            return
+
+        banned_id = int(match.group(1))
+
+        # Проверяем, не в бане ли уже
+        if banned_id in BANNED_USERS:
+            await client.send_message(
+                DESTINATION_CHAT,
+                f"⏳ Пользователь `{banned_id}` уже в чёрном списке.",
+                reply_to=event.message.id
+            )
+            return
+
+        # Добавляем в чёрный список
+        BANNED_USERS.add(banned_id)
+        save_banned_users(BANNED_USERS)
+
+        print(f"🚫 Пользователь {banned_id} добавлен в чёрный список")
+
+        # Отправляем подтверждение (сообщение НЕ удаляем)
+        try:
+            await client.send_message(
+                DESTINATION_CHAT,
+                f"🚫 Пользователь `{banned_id}` добавлен в чёрный список.\n"
+                f"Больше его сообщения не будут пересылаться.",
+                reply_to=event.message.id
+            )
+        except Exception as e:
+            print(f"⚠️ Не удалось отправить подтверждение: {e}")
+
+    except Exception as e:
+        logger.exception(f"❌ Ошибка обработки команды 'бан': {e}")
+
+
+# ============================================================
 # START MONITOR
 # ============================================================
 
@@ -1192,75 +1302,4 @@ async def start_monitor():
     )
 
 
-    logger.info(
-        f"👀 Отслеживаемых чатов: "
-        f"{len(TARGET_CHATS)}"
-    )
-
-
-    logger.info(
-        f"🔑 Ключевых слов: "
-        f"{len(KEYWORDS)}"
-    )
-
-
-    logger.info(
-        f"📨 Destination ID: "
-        f"{DESTINATION_CHAT}"
-    )
-
-
-    logger.info(
-        "✅ fresh offers готов "
-        "к приёму сообщений"
-    )
-
-
-# ============================================================
-# STOP MONITOR
-# ============================================================
-
-async def stop_monitor():
-
-    if client.is_connected():
-
-        await client.disconnect()
-
-        logger.info(
-            "🛑 Telegram Monitor отключён"
-        )
-
-
-# ============================================================
-# ЛОКАЛЬНЫЙ ЗАПУСК
-# ============================================================
-
-async def run_standalone():
-
-    await start_monitor()
-
-    print()
-    print(
-        "✅ SHARMINATOR MONITOR запущен"
-    )
-    print(
-        "⏳ Ожидаю новые сообщения..."
-    )
-    print()
-
-    await client.run_until_disconnected()
-
-
-if __name__ == "__main__":
-
-    try:
-
-        asyncio.run(
-            run_standalone()
-        )
-
-    except KeyboardInterrupt:
-
-        print(
-            "\n🛑 Монитор остановлен пользователем"
-        )
+   
