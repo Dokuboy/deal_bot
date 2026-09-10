@@ -272,7 +272,7 @@ KEYWORDS = [
 
 
 # ============================================================
-# МИНУС-СЛОВА (СТОП-СЛОВА) — ТОЛЬКО СПИСОК
+# МИНУС-СЛОВА (СТОП-СЛОВА)
 # ============================================================
 
 STOP_WORDS = [
@@ -352,7 +352,6 @@ STOP_WORDS = [
     "агентские",
     "физ сим",
     "пополнение",
-    # === ВСЕ СКЛОНЕНИЯ ===
     "базы", "базу", "базе", "базой", "баз",
     "аккаунт", "аккаунта", "аккаунту", "аккаунтом", "аккаунтах",
     "фармы", "фармов", "фармам", "фармами", "фармах",
@@ -360,279 +359,76 @@ STOP_WORDS = [
     "реферал", "рефералы", "реферала", "рефералов",
     "трастовые", "трастовых", "трастовым", "трастовыми",
     "выдача", "выдачи", "выдачу", "выдаче", "выдачей",
-    # === GAMBLING ===
-    "gambling",
-    "gamble",
-    "gambler",
-    "gamblers",
-    "гемблинг",
-    "гембла",
-    "гемблер",
-    # === NUTRA ===
-    "nutra",
-    "нутры",
-    "нутра",
-    # === VIDEO ===
-    "video",
-    "videos",
-    "видео",
-    # === MOTION ===
-    "motion",
-    "motions",
-    # === DESIGN ===
-    "design",
-    "designs",
-    "designer",
-    "designers",
-    "дизайн",
-    "дизайна",
-    "дизайну",
-    "дизайном",
-    "дизайны",
-    "дизайнер",
-    "дизайнера",
-    "дизайнеров",
-    # === ДОКУМЕНТЫ (ПОЛНЫЙ СПИСОК) ===
-    "документы",
-    "документов",
-    "документам",
-    "документами",
-    "документах",
-    "документ",
-    "документом",
-    "документе",
-    "документик",
-    "документика",
-    "документику",
-    "документиком",
-    "документики",
-    "документиков",
-    "документикам",
-    "документиками",
-    "документиках",
-    "док",
-    "дока",
-    "доку",
-    "доком",
-    "доки",
-    "доков",
-    "докам",
-    "доками",
-    "доках",
-    "докер",
-    "докера",
-    "докеру",
-    "докером",
-    "докеры",
-    "докеров",
-    "докерам",
-    "докерами",
-    "докерах",
-    "паспорт",
-    "паспорта",
-    "паспорту",
-    "паспортом",
-    "паспорты",
-    "паспортов",
-    "паспортам",
-    "паспортами",
-    "паспортах",
-    "паспортик",
-    "паспортика",
-    "паспортику",
-    "паспортиком",
-    "паспортики",
-    "паспортиков",
-    "паспортикам",
-    "паспортиками",
-    "паспортиках",
-    "удостоверение",
-    "удостоверения",
-    "удостоверению",
-    "удостоверением",
-    "удостоверении",
-    "удостоверенье",
-    "удостоверенья",
-    "удостоверенью",
-    "удостовереньем",
-    "удостоверенье",
-    "удостовереньи",
-    "удостоверений",
-    "удостоверениям",
-    "удостоверениями",
-    "удостоверениях",
-    "водительские",
-    "водительского",
-    "водительскому",
-    "водительским",
-    "водительскими",
-    "водительских",
-    "водительское",
-    "водительская",
-    "водительской",
-    "водительскую",
-    "водительские",
-    "водительских",
-    "водительским",
-    "водительскими",
-    "водительские",
-    "selfie",
-    "селфи",
-    "селфи",
-    "селфи",
-    "id",
-    "айди",
-    "айдишник",
-    "айдишника",
-    "айдишнику",
-    "айдишником",
-    "айдишники",
-    "айдишников",
-    "айдишникам",
-    "айдишниками",
-    "айдишниках",
-    # === БАНКОВСКИЕ УСЛУГИ ===
-    "wire",
-    "wires",
-    "iban",
-    "ibans",
-    "ибан",
-    "ибаны",
-    "settlement",
-    "settlements",
-    "расчет",
-    "расчеты",
-    "расчета",
-    "расчетов",
-    "interac",
-    "usdt",
-    "c2b",
-    "business",
-    "бизнес",
-    "бизнеса",
-    "бизнесу",
-    "бизнесом",
-    "бизнесы",
-    "бизнесов",
-    "client name",
-    "имя клиента",
-    "client",
-    "клиент",
-    "клиента",
-    "клиенту",
-    "клиентом",
-    "клиенты",
-    "клиентов",
-    # === ЗАРАБОТОК, ТРЕЙДИНГ ===
-    "заработок",
-    "заработка",
-    "заработку",
-    "заработком",
-    "заработки",
-    "заработков",
-    "новичок",
-    "новичка",
-    "новичку",
-    "новичком",
-    "новички",
-    "новичков",
-    "бесплатный",
-    "бесплатно",
-    "бесплатная",
-    "бесплатные",
-    "бесплатного",
-    "бесплатной",
-    "бесплатных",
-    "вход бесплатный",
-    # === КРИПТА, ОБМЕН, OTC, СПАМ ===
-    "otc",
-    "usdt",
-    "fiat",
-    "global otc",
-    "zero risk",
-    "safety period",
-    "we pay first",
-    "disbursal",
-    "acepay_exc",
-    "acepay_otc_bot",
-    "обменник",
-    "обмен",
-    "крипта",
-    "криптовалюта",
-    "usd",
-    "eur",
-    "gbp",
-    "sgd",
-    "cny",
-    "inr",
-    "bdt",
-    "pkr",
-    "krw",
-    "aed",
-    "try",
-    "myr",
-    "thb",
-    "vnd",
-    "idr",
-    "brl",
-    "депозит",
-    "деп",
-    "вывод",
-    "выплата",
-    "payout",
-    # === ФИНАНСЫ, ДОХОД, ЗАРАБОТОК (СПАМ) ===
-    "высокий доход",
-    "доход",
-    "дохода",
-    "доходу",
-    "доходом",
-    "доходы",
-    "доходов",
-    "500 тыс",
-    "повышенный риск",
-    "безопасность",
-    "анонимность",
-    "обучаем",
-    "сопровождаем",
-    "страхуем",
-    "без залога",
-    "карьерный рост",
-    "доходность",
-    "доходности",
-    "финансовые проблемы",
-    "финансовые цели",
-    # === СПАМ-БОТЫ DHM ===
-    "dhm_2d3d371cbot",
-    "dhm_754b721ebot",
-    "dhm_868687fdbot",
-    "dhm_",
-    "dhm",
+    "gambling", "gamble", "gambler", "gamblers",
+    "гемблинг", "гембла", "гемблер",
+    "nutra", "нутры", "нутра",
+    "video", "videos", "видео",
+    "motion", "motions",
+    "design", "designs", "designer", "designers",
+    "дизайн", "дизайна", "дизайну", "дизайном", "дизайны",
+    "дизайнер", "дизайнера", "дизайнеров",
+    "документы", "документов", "документам", "документами", "документах",
+    "документ", "документом", "документе",
+    "документик", "документика", "документику", "документиком",
+    "документики", "документиков", "документикам", "документиками", "документиках",
+    "док", "дока", "доку", "доком", "доки", "доков", "докам", "доками", "доках",
+    "докер", "докера", "докеру", "докером", "докеры", "докеров", "докерам", "докерами", "докерах",
+    "паспорт", "паспорта", "паспорту", "паспортом", "паспорты",
+    "паспортов", "паспортам", "паспортами", "паспортах",
+    "паспортик", "паспортика", "паспортику", "паспортиком",
+    "паспортики", "паспортиков", "паспортикам", "паспортиками", "паспортиках",
+    "удостоверение", "удостоверения", "удостоверению", "удостоверением", "удостоверении",
+    "удостоверенье", "удостоверенья", "удостоверенью", "удостовереньем",
+    "удостоверенье", "удостовереньи", "удостоверений",
+    "удостоверениям", "удостоверениями", "удостоверениях",
+    "водительские", "водительского", "водительскому", "водительским",
+    "водительскими", "водительских", "водительское", "водительская",
+    "водительской", "водительскую", "водительские", "водительских",
+    "водительским", "водительскими", "водительские",
+    "selfie", "селфи", "id", "айди", "айдишник", "айдишника",
+    "айдишнику", "айдишником", "айдишники", "айдишников",
+    "айдишникам", "айдишниками", "айдишниках",
+    "wire", "wires", "iban", "ibans", "ибан", "ибаны",
+    "settlement", "settlements", "расчет", "расчеты",
+    "расчета", "расчетов", "interac", "usdt", "c2b",
+    "business", "бизнес", "бизнеса", "бизнесу", "бизнесом",
+    "бизнесы", "бизнесов", "client name", "имя клиента",
+    "client", "клиент", "клиента", "клиенту", "клиентом",
+    "клиенты", "клиентов",
+    "заработок", "заработка", "заработку", "заработком",
+    "заработки", "заработков", "новичок", "новичка",
+    "новичку", "новичком", "новички", "новичков",
+    "бесплатный", "бесплатно", "бесплатная", "бесплатные",
+    "бесплатного", "бесплатной", "бесплатных", "вход бесплатный",
+    "otc", "fiat", "global otc", "zero risk",
+    "safety period", "we pay first", "disbursal",
+    "acepay_exc", "acepay_otc_bot", "обменник", "обмен",
+    "крипта", "криптовалюта", "usd", "eur", "gbp",
+    "sgd", "cny", "inr", "bdt", "pkr", "krw",
+    "aed", "try", "myr", "thb", "vnd", "idr", "brl",
+    "депозит", "деп", "вывод", "выплата", "payout",
+    "высокий доход", "доход", "дохода", "доходу", "доходом",
+    "доходы", "доходов", "500 тыс", "повышенный риск",
+    "безопасность", "анонимность", "обучаем", "сопровождаем",
+    "страхуем", "без залога", "карьерный рост",
+    "доходность", "доходности", "финансовые проблемы", "финансовые цели",
+    "dhm_2d3d371cbot", "dhm_754b721ebot", "dhm_868687fdbot",
+    "dhm_", "dhm",
 ]
 
+
 # ============================================================
-# ЗАЩИТА ОТ ДУБЛИКАТОВ (ПО ТЕКСТУ + ОТПРАВИТЕЛЮ)
+# ЗАЩИТА ОТ ДУБЛИКАТОВ
 # ============================================================
 
-# Множество для хранения хешей уже отправленных сообщений
-# Ключ: (sender_id, text_hash)
 sent_texts = set()
 
 
 def get_text_hash(text: str) -> str:
-    """
-    Создаёт хеш текста для сравнения.
-    Нормализует текст (убирает пробелы, приводит к нижнему регистру).
-    """
     if not text:
         return ""
-    
-    # Нормализуем текст
     normalized = normalize_text_for_filter(text)
-    
-    # Убираем лишние пробелы
     normalized = ' '.join(normalized.split())
-    
-    # Создаем хеш
     return hashlib.md5(normalized.encode()).hexdigest()
 
 
@@ -652,28 +448,12 @@ client = TelegramClient(
 # ============================================================
 
 def normalize_text_for_filter(text: str) -> str:
-    """
-    Приводит текст к нормальному виду для фильтрации:
-    - убирает эмодзи и спецсимволы
-    - убирает жирный шрифт, курсив и т.д.
-    - приводит к нижнему регистру
-    - убирает лишние пробелы
-    """
     if not text:
         return ""
-    
-    # Нормализуем Unicode (преобразуем 𝘿𝙖𝙩𝙖𝙗𝙖𝙨𝙚𝙨 → Database)
     normalized = unicodedata.normalize('NFKC', text)
-    
-    # Убираем все символы, кроме букв, цифр, пробелов и базовых знаков препинания
     cleaned = re.sub(r'[^\w\s]', ' ', normalized)
-    
-    # Приводим к нижнему регистру
     cleaned = cleaned.lower()
-    
-    # Убираем лишние пробелы
     cleaned = ' '.join(cleaned.split())
-    
     return cleaned
 
 
@@ -682,13 +462,10 @@ def normalize_text_for_filter(text: str) -> str:
 # ============================================================
 
 def normalize_text(text: str) -> str:
-
     if not text:
         return ""
-
     text = text.lower()
     text = re.sub(r"\s+", " ", text)
-
     return text.strip()
 
 
@@ -697,19 +474,11 @@ def normalize_text(text: str) -> str:
 # ============================================================
 
 def find_keywords(text: str):
-
     normalized = normalize_text(text)
-
     matched_words = []
-
     for keyword in KEYWORDS:
-
         if keyword.lower() in normalized:
-
-            matched_words.append(
-                keyword
-            )
-
+            matched_words.append(keyword)
     return matched_words
 
 
@@ -718,439 +487,124 @@ def find_keywords(text: str):
 # ============================================================
 
 async def resolve_destination():
-
     global destination_peer
 
-    logger.info(
-        "🔎 Ищу чат fresh offers среди диалогов..."
-    )
-
-    # StringSession хранит авторизацию,
-    # но entity cache нужно заполнить после запуска.
-    dialogs = await client.get_dialogs(
-        limit=None
-    )
-
-    logger.info(
-        f"📚 Загружено диалогов: {len(dialogs)}"
-    )
+    logger.info("🔎 Ищу чат fresh offers среди диалогов...")
+    dialogs = await client.get_dialogs(limit=None)
+    logger.info(f"📚 Загружено диалогов: {len(dialogs)}")
 
     destination_peer = None
 
-
-    # --------------------------------------------------------
-    # 1. Сначала ищем по ID
-    # --------------------------------------------------------
-
     for dialog in dialogs:
-
         dialog_id = dialog.id
-
-        entity_id = getattr(
-            dialog.entity,
-            "id",
-            None
-        )
-
-        if (
-            dialog_id == DESTINATION_CHAT
-            or entity_id == abs(DESTINATION_CHAT)
-        ):
-
+        entity_id = getattr(dialog.entity, "id", None)
+        if dialog_id == DESTINATION_CHAT or entity_id == abs(DESTINATION_CHAT):
             destination_peer = dialog.input_entity
-
-            logger.info(
-                f"✅ Destination найден по ID: "
-                f"{dialog.name} | "
-                f"dialog.id={dialog_id} | "
-                f"entity.id={entity_id}"
-            )
-
+            logger.info(f"✅ Destination найден по ID: {dialog.name}")
             return destination_peer
-
-
-    # --------------------------------------------------------
-    # 2. Если ID не совпал — ищем по названию
-    # --------------------------------------------------------
 
     for dialog in dialogs:
-
-        dialog_name = (
-            dialog.name
-            or ""
-        ).strip()
-
-        if (
-            dialog_name.casefold()
-            == DESTINATION_TITLE.casefold()
-        ):
-
+        dialog_name = (dialog.name or "").strip()
+        if dialog_name.casefold() == DESTINATION_TITLE.casefold():
             destination_peer = dialog.input_entity
-
-            logger.info(
-                f"✅ Destination найден по названию: "
-                f"{dialog.name} | "
-                f"dialog.id={dialog.id}"
-            )
-
+            logger.info(f"✅ Destination найден по названию: {dialog.name}")
             return destination_peer
 
-
-    # --------------------------------------------------------
-    # Не нашли
-    # --------------------------------------------------------
-
-    logger.error(
-        "❌ fresh offers не найден среди диалогов."
-    )
-
-    logger.error(
-        f"❌ Ожидался ID: {DESTINATION_CHAT}"
-    )
-
-    raise RuntimeError(
-        "Чат fresh offers не найден среди "
-        "диалогов Telethon-аккаунта."
-    )
+    logger.error("❌ fresh offers не найден среди диалогов.")
+    raise RuntimeError("Чат fresh offers не найден среди диалогов Telethon-аккаунта.")
 
 
 # ============================================================
 # НОВЫЕ СООБЩЕНИЯ
 # ============================================================
 
-@client.on(
-    events.NewMessage(
-        incoming=True
-    )
-)
+@client.on(events.NewMessage(incoming=True))
 async def monitor_message(event):
-
     global destination_peer
 
     try:
-
-        # ----------------------------------------------------
-        # Проверяем, что это один из наших чатов
-        # ----------------------------------------------------
-
         if event.chat_id not in TARGET_CHATS:
             return
 
-
-        # ----------------------------------------------------
-        # ЧЁРНЫЙ СПИСОК
-        # ----------------------------------------------------
-        
+        # === ЧЁРНЫЙ СПИСОК ===
         if event.sender_id in BANNED_USERS:
             print(f"⏭️ Пропущено (в чёрном списке): {event.sender_id}")
             return
 
-
-        # Если сообщение прилетело в момент запуска,
-        # а destination ещё не готов
         if destination_peer is None:
-
-            logger.warning(
-                "⚠️ Destination ещё не готов. "
-                "Сообщение пропущено."
-            )
-
             return
 
-
         message = event.message
-
-        message_text = (
-            message.raw_text
-            or ""
-        )
-
-
-        # ----------------------------------------------------
-        # Получаем данные чата и автора
-        # ----------------------------------------------------
+        message_text = message.raw_text or ""
 
         chat = await event.get_chat()
-
         sender = await event.get_sender()
 
-        # ============================================================
-        # ДИАГНОСТИКА
-        # ============================================================
-
-        # Получаем username сразу после sender
         sender_username = getattr(sender, "username", None) if sender else None
+        chat_title = getattr(chat, "title", "Unknown chat")
+        chat_username = getattr(chat, "username", None)
 
-        print(f"🔍 [DIAG] sender: {sender}")
-        print(f"🔍 [DIAG] sender_username: {sender_username}")
-        print(f"🔍 [DIAG] sender_id: {getattr(sender, 'id', None) if sender else None}")
-        if hasattr(event.message, 'sender'):
-            print(f"🔍 [DIAG] event.message.sender: {event.message.sender}")
-        else:
-            print(f"🔍 [DIAG] event.message.sender: Нет")
-
-        # ============================================================
-        # КОНЕЦ ДИАГНОСТИКИ
-        # ============================================================
-
-        chat_title = getattr(
-            chat,
-            "title",
-            "Unknown chat"
-        )
-
-
-        chat_username = getattr(
-            chat,
-            "username",
-            None
-        )
-
-
-        # ----------------------------------------------------
-        # ПРОВЕРКА НА СТОП-СЛОВА (МИНУС-СЛОВА)
-        # ----------------------------------------------------
-
-        # Нормализуем текст для проверки стоп-слов
+        # === СТОП-СЛОВА ===
         normalized_text = normalize_text_for_filter(message_text)
-        
-        # Отладка (можно убрать после проверки)
-        print(f"🔍 Нормализованный текст: {normalized_text[:100]}...")
-
         stop_word_found = False
-
         for stop_word in STOP_WORDS:
-
             if stop_word.lower() in normalized_text:
-
-                print(
-                    f"⏭️ Пропущено (стоп-слово '{stop_word}') "
-                    f"[{chat_title}]: {message_text[:80]}..."
-                )
-
+                print(f"⏭️ Пропущено (стоп-слово '{stop_word}') [{chat_title}]")
                 stop_word_found = True
-
                 break
-
         if stop_word_found:
             return
 
-
-        # ----------------------------------------------------
-        # ФИЛЬТР ПО КЛЮЧЕВЫМ СЛОВАМ
-        # ----------------------------------------------------
-
-        matched_words = find_keywords(
-            message_text
-        )
-
-
+        # === КЛЮЧЕВЫЕ СЛОВА ===
+        matched_words = find_keywords(message_text)
         if not matched_words:
-
-            print(
-                f"⏭️ Пропущено "
-                f"[{chat_title}]: "
-                f"{message_text[:80]}..."
-            )
-
             return
 
-
-        # ============================================================
-        # ПРОВЕРКА НА ДУБЛИКАТ ПО ТЕКСТУ + ОТПРАВИТЕЛЮ
-        # ============================================================
-
-        # Получаем ID отправителя
-        sender_id = None
-        if sender:
-            sender_id = getattr(sender, "id", None)
-
-        # Если не удалось получить ID отправителя — пропускаем проверку
+        # === ДУБЛИКАТЫ ===
+        sender_id = getattr(sender, "id", None) if sender else None
         if sender_id:
             text_hash = get_text_hash(message_text)
             unique_key = (sender_id, text_hash)
-
             if unique_key in sent_texts:
-                print(
-                    f"⏭️ Дубликат текста от того же отправителя пропущен: "
-                    f"отправитель {sender_id}, "
-                    f"хеш {text_hash[:8]}..."
-                )
                 return
-
-            # Добавляем в список отправленных
             sent_texts.add(unique_key)
-
-            # Ограничиваем размер множества (чтобы не переполнить память)
             if len(sent_texts) > 10000:
-                # Удаляем 1000 старых записей
                 for _ in range(1000):
                     if sent_texts:
                         sent_texts.pop()
-                print("🧹 Очищено 1000 старых записей дубликатов")
 
-
-        # ----------------------------------------------------
-        # ИНФОРМАЦИЯ ОБ ОТПРАВИТЕЛЕ
-        # ----------------------------------------------------
-
+        # === ИНФОРМАЦИЯ ОБ ОТПРАВИТЕЛЕ ===
         sender_name = "Неизвестно"
-        sender_username = None
-
-
         if sender:
+            first_name = getattr(sender, "first_name", "") or ""
+            last_name = getattr(sender, "last_name", "") or ""
+            sender_name = f"{first_name} {last_name}".strip() or "Без имени"
 
-            first_name = (
-                getattr(
-                    sender,
-                    "first_name",
-                    ""
-                )
-                or ""
-            )
-
-            last_name = (
-                getattr(
-                    sender,
-                    "last_name",
-                    ""
-                )
-                or ""
-            )
-
-
-            sender_name = (
-                f"{first_name} {last_name}"
-                .strip()
-                or "Без имени"
-            )
-
-
-            sender_username = getattr(
-                sender,
-                "username",
-                None
-            )
-
-            # Для защищённых чатов пробуем получить username из других источников
-            if not sender_username and hasattr(event.message, 'sender'):
-                sender_username = getattr(event.message.sender, 'username', None)
-
-            if not sender_username and hasattr(event.message, 'fwd_from'):
-                sender_username = getattr(event.message.fwd_from, 'username', None)
-
-            if sender_username:
-                print(f"🔍 Найден username: @{sender_username}")
-
-
-        # ----------------------------------------------------
-        # ЛОГИ
-        # ----------------------------------------------------
-
-        print()
-        print("=" * 70)
-
-        print(
-            "📩 НАЙДЕНО ПОДХОДЯЩЕЕ СООБЩЕНИЕ"
-        )
-
-        print(
-            f"📍 Источник: {chat_title}"
-        )
-
-        print(
-            f"🆔 Message ID: {event.id}"
-        )
-
-        print(
-            f"👤 Отправитель: {sender_name}"
-        )
-
-
-        if sender_username:
-
-            print(
-                f"🔹 Username: "
-                f"@{sender_username}"
-            )
-
-
-        if sender_id:
-
-            print(
-                f"🆔 Sender ID: "
-                f"{sender_id}"
-            )
-
-
-        print(
-            f"🔑 Совпадения: "
-            f"{', '.join(matched_words[:10])}"
-        )
-
-        print("=" * 70)
-
-
-        # ----------------------------------------------------
-        # Получаем InputPeer ИСХОДНОГО ЧАТА
-        #
-        # Это надёжнее, чем передавать только числовой ID.
-        # ----------------------------------------------------
-
-        source_peer = await event.get_input_chat()
-
-
-        # ============================================================
-        # ВСЕГДА ОТПРАВЛЯТЬ ТЕКСТОМ (а не пересылать)
-        # ============================================================
-
-        print(
-            f"📨 Отправляю текстом в fresh offers "
-            f"из {chat_title}"
-        )
-
-        # Формируем текст сообщения с информацией об отправителе
+        # === ФОРМИРУЕМ ТЕКСТ ===
         full_text = f"📩 НОВОЕ СООБЩЕНИЕ\n\n"
         full_text += f"📍 Источник: {chat_title}\n"
         full_text += f"👤 Отправитель: {sender_name}\n"
-
         if sender_username:
             full_text += f"🔹 Username: @{sender_username}\n"
             full_text += f"👤 Профиль: https://t.me/{sender_username}\n"
-
         if sender_id:
             full_text += f"🆔 Sender ID: {sender_id}\n"
-
         full_text += f"🆔 Message ID: {event.id}\n"
         full_text += f"🔑 Ключи: {', '.join(matched_words[:10])}\n\n"
-
-        # ДОБАВЛЯЕМ САМ ТЕКСТ СООБЩЕНИЯ
         full_text += "=" * 50 + "\n\n"
-        full_text += message_text  # ← САМО СООБЩЕНИЕ
-
-        # Если чат публичный — добавляем ссылку
+        full_text += message_text
         if chat_username:
-            full_text += (
-                f"\n\n🔗 Открыть оригинал:\n"
-                f"https://t.me/{chat_username}/{event.id}"
-            )
+            full_text += f"\n\n🔗 Открыть оригинал:\nhttps://t.me/{chat_username}/{event.id}"
 
-        # Отправляем текст в fresh offers
+        # === ОТПРАВЛЯЕМ ===
         try:
-            await client.send_message(
-                destination_peer,
-                full_text
-            )
-            print("📨 Текст сообщения отправлен в fresh offers")
-        except Exception as e2:
-            print(f"❌ Ошибка отправки текста: {e2}")
-
+            await client.send_message(destination_peer, full_text)
+            print(f"📨 Отправлено в fresh offers из {chat_title}")
+        except Exception as e:
+            print(f"❌ Ошибка отправки: {e}")
 
     except Exception as e:
-
-        logger.exception(
-            f"❌ Ошибка Telegram Monitor: {e}"
-        )
+        logger.exception(f"❌ Ошибка Telegram Monitor: {e}")
 
 
 # ============================================================
@@ -1231,75 +685,54 @@ async def handle_ban_command(event):
 # ============================================================
 
 async def start_monitor():
-
     global destination_peer
 
-    logger.info(
-        "🔄 Подключение Telethon..."
-    )
-
-
-    # --------------------------------------------------------
-    # Подключаемся
-    # --------------------------------------------------------
+    logger.info("🔄 Подключение Telethon...")
 
     await client.connect()
 
-
-    # --------------------------------------------------------
-    # Проверяем StringSession
-    # --------------------------------------------------------
-
-    authorized = (
-        await client.is_user_authorized()
-    )
-
-
-    if not authorized:
-
+    if not await client.is_user_authorized():
         await client.disconnect()
-
-        raise RuntimeError(
-            "TELEGRAM_STRING_SESSION "
-            "не авторизована."
-        )
-
-
-    # --------------------------------------------------------
-    # Наш аккаунт
-    # --------------------------------------------------------
+        raise RuntimeError("TELEGRAM_STRING_SESSION не авторизована.")
 
     me = await client.get_me()
-
-
-    username = (
-        f"@{me.username}"
-        if me.username
-        else "без username"
-    )
-
-
-    logger.info(
-        f"👤 Telethon аккаунт: "
-        f"{me.first_name} ({username})"
-    )
-
-
-    # --------------------------------------------------------
-    # ВАЖНО:
-    # Загружаем диалоги и находим fresh offers.
-    # --------------------------------------------------------
+    username = f"@{me.username}" if me.username else "без username"
+    logger.info(f"👤 Telethon аккаунт: {me.first_name} ({username})")
 
     await resolve_destination()
 
-
-    # --------------------------------------------------------
-    # Готово
-    # --------------------------------------------------------
-
-    logger.info(
-        "✅ SHARMINATOR MONITOR подключён"
-    )
+    logger.info("✅ SHARMINATOR MONITOR подключён")
+    logger.info(f"👀 Отслеживаемых чатов: {len(TARGET_CHATS)}")
+    logger.info(f"🔑 Ключевых слов: {len(KEYWORDS)}")
+    logger.info(f"🚫 Чёрный список: {len(BANNED_USERS)} пользователей")
+    logger.info(f"📨 Destination ID: {DESTINATION_CHAT}")
 
 
-   
+# ============================================================
+# STOP MONITOR
+# ============================================================
+
+async def stop_monitor():
+    if client.is_connected():
+        await client.disconnect()
+        logger.info("🛑 Telegram Monitor отключён")
+
+
+# ============================================================
+# ЛОКАЛЬНЫЙ ЗАПУСК
+# ============================================================
+
+async def run_standalone():
+    await start_monitor()
+    print()
+    print("✅ SHARMINATOR MONITOR запущен")
+    print("⏳ Ожидаю новые сообщения...")
+    print()
+    await client.run_until_disconnected()
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(run_standalone())
+    except KeyboardInterrupt:
+        print("\n🛑 Монитор остановлен пользователем")
