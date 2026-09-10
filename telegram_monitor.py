@@ -6,6 +6,9 @@ import logging
 import unicodedata
 import hashlib
 
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telethon.errors import ChatForwardsRestrictedError
@@ -30,6 +33,7 @@ logger = logging.getLogger(__name__)
 API_ID = int(os.environ["TELEGRAM_API_ID"])
 API_HASH = os.environ["TELEGRAM_API_HASH"].strip()
 STRING_SESSION = os.environ["TELEGRAM_STRING_SESSION"].strip()
+SHEET_ID = os.environ["SHEET_ID"]
 
 
 # ============================================================
@@ -54,34 +58,74 @@ TARGET_CHATS = [
 DESTINATION_CHAT = -5462678076
 DESTINATION_TITLE = "fresh offers"
 
-# После запуска сюда будет записан реальный InputPeer
 destination_peer = None
 
 
 # ============================================================
-# ЧЁРНЫЙ СПИСОК
+# ЧЁРНЫЙ СПИСОК (Google Sheets)
 # ============================================================
 
-BANNED_USERS_FILE = "banned_users.json"
+BANNED_SHEET_NAME = "BannedUsers"
+
+
+def get_banned_sheet():
+    """Подключается к листу BannedUsers в Google Таблице"""
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    client_gs = gspread.authorize(creds)
+    sheet = client_gs.open_by_key(SHEET_ID).worksheet(BANNED_SHEET_NAME)
+    return sheet
+
 
 def load_banned_users():
-    if os.path.exists(BANNED_USERS_FILE):
-        try:
-            with open(BANNED_USERS_FILE, "r", encoding="utf-8") as f:
-                return set(json.load(f))
-        except:
-            return set()
-    return set()
+    """
+    Загружает чёрный список из Google Sheets.
+    Возвращает словарь: {user_id: {"username": ..., "name": ...}}
+    """
+    try:
+        sheet = get_banned_sheet()
+        rows = sheet.get_all_values()
+        banned = {}
+        for row in rows[1:]:  # пропускаем заголовки
+            if row and row[0].strip():
+                try:
+                    user_id = int(row[0].strip())
+                    banned[user_id] = {
+                        "username": row[1] if len(row) > 1 else "",
+                        "name": row[2] if len(row) > 2 else ""
+                    }
+                except ValueError:
+                    continue
+        print(f"✅ Загружено {len(banned)} забаненных из Google Sheets")
+        return banned
+    except Exception as e:
+        print(f"⚠️ Ошибка загрузки чёрного списка: {e}")
+        return {}
+
 
 def save_banned_users(banned):
+    """Сохраняет чёрный список в Google Sheets"""
     try:
-        with open(BANNED_USERS_FILE, "w", encoding="utf-8") as f:
-            json.dump(list(banned), f, ensure_ascii=False, indent=2)
+        sheet = get_banned_sheet()
+        sheet.clear()
+        sheet.append_row(["ID", "Username", "Name"])
+        for user_id, info in banned.items():
+            sheet.append_row([
+                user_id,
+                info.get("username", ""),
+                info.get("name", "")
+            ])
+        print(f"✅ Сохранено {len(banned)} забаненных в Google Sheets")
         return True
     except Exception as e:
         print(f"❌ Ошибка сохранения чёрного списка: {e}")
         return False
 
+
+# Загружаем чёрный список при старте
 BANNED_USERS = load_banned_users()
 
 
@@ -276,82 +320,22 @@ KEYWORDS = [
 # ============================================================
 
 STOP_WORDS = [
-    "payment",
-    "platform",
-    "stripe",
-    "paypal",
-    "wise",
-    "square",
-    "sumup",
-    "payoneer",
-    "revolut",
-    "geegpay",
-    "visanet",
-    "authorize.net",
-    "flutterwave",
-    "fresh",
-    "bank",
-    "documents",
-    "retention",
-    "signals",
-    "tools",
-    "recovery",
-    "registration",
-    "database",
-    "api integration",
-    "igaming",
-    "платформа",
-    "admin",
-    "services",
-    "ru",
-    "чардж",
-    "charge",
-    "рекавери",
-    "база",
-    "варм",
-    "холодка",
-    "реги",
-    "regs",
-    "depositors",
-    "osys",
-    "reputation",
-    "работа",
-    "дроповод",
-    "дроп",
-    "domains",
-    "подработка",
-    "serm",
-    "orm",
-    "blackhat",
-    "hosting",
-    "ру",
-    "реквизиты",
-    "рассылка",
-    "видео",
-    "max",
-    "provider",
-    "sms",
-    "data",
-    "бан",
-    "accounts",
-    "телефония",
-    "деньги",
-    "вотсап",
-    "Подработка",
-    "Паспорт",
-    "Обмен",
-    "Обучение",
-    "Content",
-    "воркер",
-    "vip",
-    "игроки",
-    "аккаунты",
-    "фарм",
-    "прокси",
-    "доки",
-    "агентские",
-    "физ сим",
-    "пополнение",
+    "payment", "platform", "stripe", "paypal", "wise",
+    "square", "sumup", "payoneer", "revolut", "geegpay",
+    "visanet", "authorize.net", "flutterwave", "fresh",
+    "bank", "documents", "retention", "signals", "tools",
+    "recovery", "registration", "database", "api integration",
+    "igaming", "платформа", "admin", "services", "ru",
+    "чардж", "charge", "рекавери", "база", "варм",
+    "холодка", "реги", "regs", "depositors", "osys",
+    "reputation", "работа", "дроповод", "дроп", "domains",
+    "подработка", "serm", "orm", "blackhat", "hosting",
+    "ру", "реквизиты", "рассылка", "видео", "max",
+    "provider", "sms", "data", "бан", "accounts",
+    "телефония", "деньги", "вотсап", "Подработка",
+    "Паспорт", "Обмен", "Обучение", "Content", "воркер",
+    "vip", "игроки", "аккаунты", "фарм", "прокси",
+    "доки", "агентские", "физ сим", "пополнение",
     "базы", "базу", "базе", "базой", "баз",
     "аккаунт", "аккаунта", "аккаунту", "аккаунтом", "аккаунтах",
     "фармы", "фармов", "фармам", "фармами", "фармах",
@@ -659,17 +643,27 @@ async def handle_ban_command(event):
             )
             return
 
+        # Ищем username и имя в тексте оригинального сообщения
+        username_match = re.search(r"🔹 Username: @(\S+)", original_msg.text)
+        username = username_match.group(1) if username_match else ""
+
+        name_match = re.search(r"👤 Отправитель: (.+)", original_msg.text)
+        name = name_match.group(1).strip() if name_match else ""
+
         # Добавляем в чёрный список
-        BANNED_USERS.add(banned_id)
+        BANNED_USERS[banned_id] = {
+            "username": username,
+            "name": name
+        }
         save_banned_users(BANNED_USERS)
 
-        print(f"🚫 Пользователь {banned_id} добавлен в чёрный список")
+        print(f"🚫 Пользователь {banned_id} ({username}) добавлен в чёрный список")
 
         # Отправляем подтверждение (сообщение НЕ удаляем)
         try:
             await client.send_message(
                 DESTINATION_CHAT,
-                f"🚫 Пользователь `{banned_id}` добавлен в чёрный список.\n"
+                f"🚫 Пользователь `{banned_id}` (@{username}) добавлен в чёрный список.\n"
                 f"Больше его сообщения не будут пересылаться.",
                 reply_to=event.message.id
             )
