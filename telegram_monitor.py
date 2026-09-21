@@ -316,6 +316,26 @@ KEYWORDS = [
 
 
 # ============================================================
+# КОДЫ СТРАН (ищутся ОТДЕЛЬНО, как целые слова)
+# ============================================================
+
+GEO_CODES = [
+    # === ЕВРОПА ===
+    "AT", "BE", "CH", "CZ", "DE", "DK", "ES", "FI", "FR", "GB", "GR",
+    "HR", "HU", "IE", "IT", "LT", "LU", "LV", "NL", "NO", "PL", "PT",
+    "RO", "SE", "SI", "SK", "UK",
+
+    # === LATAM ===
+    "AR", "BO", "BR", "CL", "CO", "CR", "DO", "EC", "GT", "HN", "MX",
+    "NI", "PA", "PE", "PY", "PR", "SV", "UY", "VE",
+
+    # === АЗИЯ ===
+    "AE", "BH", "CN", "HK", "ID", "IL", "IN", "JP", "KR", "KW", "KZ",
+    "MY", "PH", "PK", "QA", "SA", "SG", "TH", "TR", "TW", "VN",
+]
+
+
+# ============================================================
 # МИНУС-СЛОВА (СТОП-СЛОВА)
 # ============================================================
 
@@ -467,6 +487,28 @@ def find_keywords(text: str):
 
 
 # ============================================================
+# ПОИСК КОДОВ СТРАН (как отдельных слов)
+# ============================================================
+
+def find_geo_codes(text: str):
+    """
+    Ищет коды стран как ОТДЕЛЬНЫЕ слова (с границами).
+    Например, "DE" найдёт, а "data" — нет.
+    """
+    if not text:
+        return []
+    
+    matched = []
+    for code in GEO_CODES:
+        # Ищем код как отдельное слово (регистр не важен)
+        pattern = rf"(?<![A-Za-z]){re.escape(code)}(?![A-Za-z])"
+        if re.search(pattern, text, re.IGNORECASE):
+            matched.append(code)
+    
+    return matched
+
+
+# ============================================================
 # ПОИСК DESTINATION ЧАТА
 # ============================================================
 
@@ -541,8 +583,16 @@ async def monitor_message(event):
 
         # === КЛЮЧЕВЫЕ СЛОВА ===
         matched_words = find_keywords(message_text)
-        if not matched_words:
+
+        # === КОДЫ СТРАН (отдельная проверка) ===
+        matched_geos = find_geo_codes(message_text)
+
+        # Если нет ни ключевых слов, ни гео — пропускаем
+        if not matched_words and not matched_geos:
             return
+
+        # Объединяем для отображения
+        all_matches = matched_words + matched_geos
 
         # === ДУБЛИКАТЫ ===
         sender_id = getattr(sender, "id", None) if sender else None
@@ -574,7 +624,7 @@ async def monitor_message(event):
         if sender_id:
             full_text += f"🆔 Sender ID: {sender_id}\n"
         full_text += f"🆔 Message ID: {event.id}\n"
-        full_text += f"🔑 Ключи: {', '.join(matched_words[:10])}\n\n"
+        full_text += f"🔑 Ключи: {', '.join(all_matches[:15])}\n\n"
         full_text += "=" * 50 + "\n\n"
         full_text += message_text
         if chat_username:
@@ -698,6 +748,7 @@ async def start_monitor():
     logger.info("✅ SHARMINATOR MONITOR подключён")
     logger.info(f"👀 Отслеживаемых чатов: {len(TARGET_CHATS)}")
     logger.info(f"🔑 Ключевых слов: {len(KEYWORDS)}")
+    logger.info(f"🌍 Гео-кодов: {len(GEO_CODES)}")
     logger.info(f"🚫 Чёрный список: {len(BANNED_USERS)} пользователей")
     logger.info(f"📨 Destination ID: {DESTINATION_CHAT}")
 
