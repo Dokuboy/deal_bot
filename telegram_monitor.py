@@ -321,8 +321,7 @@ KEYWORDS = [
 
 GEO_CODES = [
     # === ЕВРОПА ===
-    "AT", "BE", "CH", "CZ", "DE", "DK", "ES", "FI", "FR", "GB", "GR",
-    "HR", "HU", "IE", "IT", "LT", "LU", "LV", "NL", "NO", "PL", "PT",
+    "AT", "BE", "CH", "CZ", "DE", "DK", "ES", "FI", "FR", "GB", "GR", "HU", "IE", "IT", "LT", "LU", "LV", "NL", "NO", "PL", "PT",
     "RO", "SE", "SI", "SK", "UK",
 
     # === LATAM ===
@@ -330,7 +329,7 @@ GEO_CODES = [
     "NI", "PA", "PE", "PY", "PR", "SV", "UY", "VE",
 
     # === АЗИЯ ===
-    "AE", "BH", "CN", "HK", "ID", "IL", "IN", "JP", "KR", "KW", "KZ",
+    "AE", "BH", "CN", "HK", "ID", "IL", "JP", "KR", "KW", "KZ",
     "MY", "PH", "PK", "QA", "SA", "SG", "TH", "TR", "TW", "VN",
 ]
 
