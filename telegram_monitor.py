@@ -321,7 +321,8 @@ KEYWORDS = [
 
 GEO_CODES = [
     # === ЕВРОПА ===
-    "AT", "BE", "CH", "CZ", "DE", "DK", "ES", "FI", "FR", "GB", "GR", "HU", "IE", "IT", "LT", "LU", "LV", "NL", "NO", "PL", "PT",
+    "AT", "BE", "CH", "CZ", "DE", "DK", "ES", "FI", "FR", "GB", "GR",
+    "HR", "HU", "IE", "IT", "LT", "LU", "LV", "NL", "NO", "PL", "PT",
     "RO", "SE", "SI", "SK", "UK",
 
     # === LATAM ===
@@ -349,7 +350,7 @@ STOP_WORDS = [
     "холодка", "реги", "regs", "depositors", "osys",
     "reputation", "работа", "дроповод", "дроп", "domains",
     "подработка", "serm", "orm", "blackhat", "hosting",
-    "ру", "реквизиты", "рассылка", "видео", "max",
+    "ру", "реквизиты", "видео", "max",
     "provider", "sms", "data", "бан", "accounts",
     "телефония", "деньги", "вотсап", "Подработка",
     "Паспорт", "Обмен", "Обучение", "Content", "воркер",
@@ -417,7 +418,40 @@ STOP_WORDS = [
     "доходность", "доходности", "финансовые проблемы", "финансовые цели",
     "dhm_2d3d371cbot", "dhm_754b721ebot", "dhm_868687fdbot",
     "dhm_", "dhm",
+    # === РАССЫЛКА, РЕКЛАМА ===
+    "рассылка", "рассылки", "рассылку", "рассылке", "рассылкой", "рассылок",
+    "телеграм рассылка",
+    "реклама", "рекламы", "рекламу", "рекламе", "рекламой",
+    "подписчиков", "подписчики", "подписчик",
+    "прайс", "прайс рекламы",
+    "сообщений", "сообщения",
+    "канал", "каналы", "каналов",
 ]
+
+
+# ============================================================
+# ЗАМЕНА ГОМОГЛИФОВ (латиница → кириллица)
+# ============================================================
+
+HOMOGLYPHS = {
+    'a': 'а', 'c': 'с', 'e': 'е', 'o': 'о', 'p': 'р', 'x': 'х',
+    'y': 'у', 'A': 'А', 'B': 'В', 'C': 'С', 'E': 'Е', 'H': 'Н',
+    'K': 'К', 'M': 'М', 'O': 'О', 'P': 'Р', 'T': 'Т', 'X': 'Х',
+    'Y': 'У',
+}
+
+
+def replace_homoglyphs(text: str) -> str:
+    """
+    Заменяет латинские буквы, похожие на кириллические,
+    на соответствующие кириллические.
+    """
+    if not text:
+        return ""
+    result = []
+    for char in text:
+        result.append(HOMOGLYPHS.get(char, char))
+    return ''.join(result)
 
 
 # ============================================================
@@ -453,10 +487,22 @@ client = TelegramClient(
 def normalize_text_for_filter(text: str) -> str:
     if not text:
         return ""
+
+    # 1. Заменяем гомоглифы (латиница → кириллица)
+    text = replace_homoglyphs(text)
+
+    # 2. Нормализуем Unicode
     normalized = unicodedata.normalize('NFKC', text)
+
+    # 3. Убираем все символы, кроме букв, цифр, пробелов
     cleaned = re.sub(r'[^\w\s]', ' ', normalized)
+
+    # 4. Приводим к нижнему регистру
     cleaned = cleaned.lower()
+
+    # 5. Убираем лишние пробелы
     cleaned = ' '.join(cleaned.split())
+
     return cleaned
 
 
@@ -467,6 +513,10 @@ def normalize_text_for_filter(text: str) -> str:
 def normalize_text(text: str) -> str:
     if not text:
         return ""
+
+    # Заменяем гомоглифы
+    text = replace_homoglyphs(text)
+
     text = text.lower()
     text = re.sub(r"\s+", " ", text)
     return text.strip()
@@ -496,14 +546,14 @@ def find_geo_codes(text: str):
     """
     if not text:
         return []
-    
+
     matched = []
     for code in GEO_CODES:
         # Ищем код как отдельное слово (регистр не важен)
         pattern = rf"(?<![A-Za-z]){re.escape(code)}(?![A-Za-z])"
         if re.search(pattern, text, re.IGNORECASE):
             matched.append(code)
-    
+
     return matched
 
 
