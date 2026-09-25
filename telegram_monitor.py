@@ -321,7 +321,7 @@ KEYWORDS = [
 
 GEO_CODES = [
     # === ЕВРОПА ===
-    "AT", "BE", "CH", "CZ", "DE", "DK", "ES", "FI", "FR", "GB", "GR", 
+    "AT", "BE", "CH", "CZ", "DE", "DK", "ES", "FI", "FR", "GB", "GR",
     "HU", "IE", "IT", "LT", "LU", "LV", "NL", "NO", "PL", "PT",
     "RO", "SE", "SI", "SK", "UK",
 
@@ -653,11 +653,16 @@ async def monitor_message(event):
         chat_title = getattr(chat, "title", "Unknown chat")
         chat_username = getattr(chat, "username", None)
 
-        # === СТОП-СЛОВА ===
+        # === СТОП-СЛОВА (ДВОЙНАЯ ПРОВЕРКА) ===
+        # Проверяем и по нормализованному тексту (с заменой гомоглифов),
+        # и по простому lower-тексту (для английских стоп-слов типа recovery, crypto)
         normalized_text = normalize_text_for_filter(message_text)
+        simple_lower = message_text.lower()
+
         stop_word_found = False
         for stop_word in STOP_WORDS:
-            if stop_word.lower() in normalized_text:
+            word_lower = stop_word.lower()
+            if word_lower in normalized_text or word_lower in simple_lower:
                 print(f"⏭️ Пропущено (стоп-слово '{stop_word}') [{chat_title}]")
                 stop_word_found = True
                 break
