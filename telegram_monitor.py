@@ -48,6 +48,7 @@ TARGET_CHATS = [
     -1001293599219,  # BLACK CHAT
     -1001337397906,  # Forex world
     -1001977656258,  # whiteaffiliate
+    -1001039329051,  # @macpreparty
 ]
 
 
@@ -460,6 +461,22 @@ STOP_WORDS = [
     "secure your leads",
     "global coverage",
     "premium services",
+
+    # === ПРОДАЖА ПЕРСОНАЛЬНЫХ ДАННЫХ (SSN, DL, DOB, EIN) ===
+    "ssn", "ssn+dob", "dob", "dl", "mmn", "mvr", "mvr+dl",
+    "cs", "cs+cr", "bg", "ein", "tlo",
+    "reverse ssn", "reverse phone", "reverse email",
+    "prof license",
+    "pricelist", "price list", "lookup service",
+    "look up service", "lookup", "look up",
+    "blessfinder", "blesslookup", "bless",
+    "ssn lookup", "ssn dob", "data lookup",
+    "background check", "background lookup",
+    "fullz", "full info", "personal info",
+    "dox", "doxx", "doxbin",
+    "tlo lookup", "tlo service",
+    "tracers", "skip trace", "skip tracing",
+    "leads lookup", "find person", "find people",
 ]
 
 
@@ -654,8 +671,6 @@ async def monitor_message(event):
         chat_username = getattr(chat, "username", None)
 
         # === СТОП-СЛОВА (ДВОЙНАЯ ПРОВЕРКА) ===
-        # Проверяем и по нормализованному тексту (с заменой гомоглифов),
-        # и по простому lower-тексту (для английских стоп-слов типа recovery, crypto)
         normalized_text = normalize_text_for_filter(message_text)
         simple_lower = message_text.lower()
 
@@ -675,11 +690,9 @@ async def monitor_message(event):
         # === КОДЫ СТРАН (отдельная проверка) ===
         matched_geos = find_geo_codes(message_text)
 
-        # Если нет ни ключевых слов, ни гео — пропускаем
         if not matched_words and not matched_geos:
             return
 
-        # Объединяем для отображения
         all_matches = matched_words + matched_geos
 
         # === ДУБЛИКАТЫ ===
@@ -747,13 +760,11 @@ async def handle_ban_command(event):
         if text not in ["бан", "ban", "🚫", "❌"]:
             return
 
-        # Проверяем, что это ответ на сообщение
         reply_to = event.message.reply_to_msg_id
         if not reply_to:
             print("⏭️ Это не ответ на сообщение, пропускаем")
             return
 
-        # Получаем оригинальное сообщение
         try:
             original_msg = await client.get_messages(DESTINATION_CHAT, ids=reply_to)
         except Exception as e:
@@ -764,7 +775,6 @@ async def handle_ban_command(event):
             print("⏭️ Оригинальное сообщение пустое")
             return
 
-        # Ищем Sender ID в тексте
         match = re.search(r"🆔 Sender ID: (\d+)", original_msg.text)
         if not match:
             print("⏭️ Sender ID не найден в сообщении")
@@ -772,7 +782,6 @@ async def handle_ban_command(event):
 
         banned_id = int(match.group(1))
 
-        # Проверяем, не в бане ли уже
         if banned_id in BANNED_USERS:
             await client.send_message(
                 DESTINATION_CHAT,
@@ -781,14 +790,12 @@ async def handle_ban_command(event):
             )
             return
 
-        # Ищем username и имя в тексте оригинального сообщения
         username_match = re.search(r"🔹 Username: @(\S+)", original_msg.text)
         username = username_match.group(1) if username_match else ""
 
         name_match = re.search(r"👤 Отправитель: (.+)", original_msg.text)
         name = name_match.group(1).strip() if name_match else ""
 
-        # Добавляем в чёрный список
         BANNED_USERS[banned_id] = {
             "username": username,
             "name": name
@@ -797,7 +804,6 @@ async def handle_ban_command(event):
 
         print(f"🚫 Пользователь {banned_id} ({username}) добавлен в чёрный список")
 
-        # Отправляем подтверждение (сообщение НЕ удаляем)
         try:
             await client.send_message(
                 DESTINATION_CHAT,
