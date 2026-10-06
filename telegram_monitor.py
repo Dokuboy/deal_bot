@@ -90,7 +90,7 @@ def load_banned_users():
         sheet = get_banned_sheet()
         rows = sheet.get_all_values()
         banned = {}
-        for row in rows[1:]:  # пропускаем заголовки
+        for row in rows[1:]:
             if row and row[0].strip():
                 try:
                     user_id = int(row[0].strip())
@@ -321,16 +321,11 @@ KEYWORDS = [
 # ============================================================
 
 GEO_CODES = [
-    # === ЕВРОПА ===
     "AT", "BE", "CH", "CZ", "DE", "DK", "ES", "FI", "FR", "GB", "GR",
     "HU", "IE", "IT", "LT", "LU", "LV", "NL", "NO", "PL", "PT",
     "RO", "SE", "SI", "SK", "UK",
-
-    # === LATAM ===
     "AR", "BO", "BR", "CL", "CO", "CR", "DO", "EC", "GT", "HN", "MX",
     "NI", "PA", "PE", "PY", "PR", "SV", "UY", "VE",
-
-    # === АЗИЯ ===
     "AE", "BH", "CN", "HK", "ID", "IL", "JP", "KR", "KW", "KZ",
     "MY", "PH", "PK", "QA", "SA", "SG", "TH", "TR", "TW", "VN",
 ]
@@ -359,7 +354,6 @@ STOP_WORDS = [
     "vip", "игроки", "аккаунты", "фарм", "прокси",
     "доки", "агентские", "физ сим", "пополнение",
 
-    # === СКЛОНЕНИЯ ===
     "базы", "базу", "базе", "базой", "баз",
     "аккаунт", "аккаунта", "аккаунту", "аккаунтом", "аккаунтах",
     "фармы", "фармов", "фармам", "фармами", "фармах",
@@ -368,25 +362,18 @@ STOP_WORDS = [
     "трастовые", "трастовых", "трастовым", "трастовыми",
     "выдача", "выдачи", "выдачу", "выдаче", "выдачей",
 
-    # === GAMBLING ===
     "gambling", "gamble", "gambler", "gamblers",
     "гемблинг", "гембла", "гемблер",
 
-    # === NUTRA ===
     "nutra", "нутры", "нутра",
 
-    # === VIDEO ===
     "video", "videos", "видео",
-
-    # === MOTION ===
     "motion", "motions",
 
-    # === DESIGN ===
     "design", "designs", "designer", "designers",
     "дизайн", "дизайна", "дизайну", "дизайном", "дизайны",
     "дизайнер", "дизайнера", "дизайнеров",
 
-    # === ДОКУМЕНТЫ ===
     "документы", "документов", "документам", "документами", "документах",
     "документ", "документом", "документе",
     "документик", "документика", "документику", "документиком",
@@ -409,7 +396,6 @@ STOP_WORDS = [
     "айдишнику", "айдишником", "айдишники", "айдишников",
     "айдишникам", "айдишниками", "айдишниках",
 
-    # === БАНКОВСКИЕ УСЛУГИ ===
     "wire", "wires", "iban", "ibans", "ибан", "ибаны",
     "settlement", "settlements", "расчет", "расчеты",
     "расчета", "расчетов", "interac", "usdt", "c2b",
@@ -418,14 +404,12 @@ STOP_WORDS = [
     "client", "клиент", "клиента", "клиенту", "клиентом",
     "клиенты", "клиентов",
 
-    # === ЗАРАБОТОК, ТРЕЙДИНГ ===
     "заработок", "заработка", "заработку", "заработком",
     "заработки", "заработков", "новичок", "новичка",
     "новичку", "новичком", "новички", "новичков",
     "бесплатный", "бесплатно", "бесплатная", "бесплатные",
     "бесплатного", "бесплатной", "бесплатных", "вход бесплатный",
 
-    # === КРИПТА, ОБМЕН, OTC ===
     "otc", "fiat", "global otc", "zero risk",
     "safety period", "we pay first", "disbursal",
     "acepay_exc", "acepay_otc_bot", "обменник", "обмен",
@@ -434,19 +418,16 @@ STOP_WORDS = [
     "aed", "try", "myr", "thb", "vnd", "idr", "brl",
     "депозит", "деп", "вывод", "выплата", "payout",
 
-    # === ФИНАНСЫ, ДОХОД ===
     "высокий доход", "доход", "дохода", "доходу", "доходом",
     "доходы", "доходов", "500 тыс", "повышенный риск",
     "безопасность", "анонимность", "обучаем", "сопровождаем",
     "страхуем", "без залога", "карьерный рост",
     "доходность", "доходности", "финансовые проблемы", "финансовые цели",
 
-    # === СПАМ-БОТЫ DHM ===
     "dhm_2d3d371cbot", "dhm_754b721ebot", "dhm_868687fdbot",
     "dhm_da531fcabot",
     "dhm_", "dhm",
 
-    # === РАССЫЛКА, РЕКЛАМА ===
     "рассылка", "рассылки", "рассылку", "рассылке", "рассылкой", "рассылок",
     "телеграм рассылка",
     "реклама", "рекламы", "рекламу", "рекламе", "рекламой",
@@ -455,7 +436,6 @@ STOP_WORDS = [
     "сообщений", "сообщения",
     "канал", "каналы", "каналов",
 
-    # === КРИПТА, FX, SERVICES ===
     "chargebacks", "chargeback",
     "ready ftds", "ftds", "ftd",
     "flash coins", "flash cions", "flash",
@@ -463,7 +443,6 @@ STOP_WORDS = [
     "global coverage",
     "premium services",
 
-    # === ПРОДАЖА ПЕРСОНАЛЬНЫХ ДАННЫХ (SSN, DL, DOB, EIN) ===
     "ssn", "ssn+dob", "dob", "dl", "mmn", "mvr", "mvr+dl",
     "cs", "cs+cr", "bg", "ein", "tlo",
     "reverse ssn", "reverse phone", "reverse email",
@@ -479,7 +458,6 @@ STOP_WORDS = [
     "tracers", "skip trace", "skip tracing",
     "leads lookup", "find person", "find people",
 
-    # === СПАМ-БОТЫ (xxin7, ylpay) ===
     "xxin7", "xxin7_bot", "xxxin7_bot",
     "ylpay", "ylpay_868", "ylpay_868_bot",
     "want to make money",
@@ -488,6 +466,14 @@ STOP_WORDS = [
     "hong kong-mainland",
     "f2f cash",
     "usdt to sell",
+    "天赐代发",
+    "此号不回",
+    "代发广告联系天赐小新",
+    "双向机器人",
+    "24小时自助",
+    "飞机号铺",
+    "this group can't be displayed",
+    "violated local laws",
 ]
 
 
@@ -504,10 +490,6 @@ HOMOGLYPHS = {
 
 
 def replace_homoglyphs(text: str) -> str:
-    """
-    Заменяет латинские буквы, похожие на кириллические,
-    на соответствующие кириллические.
-    """
     if not text:
         return ""
     result = []
@@ -543,42 +525,24 @@ client = TelegramClient(
 
 
 # ============================================================
-# НОРМАЛИЗАЦИЯ ТЕКСТА (УЛУЧШЕННАЯ)
+# НОРМАЛИЗАЦИЯ ТЕКСТА
 # ============================================================
 
 def normalize_text_for_filter(text: str) -> str:
     if not text:
         return ""
-
-    # 1. Заменяем гомоглифы (латиница → кириллица)
     text = replace_homoglyphs(text)
-
-    # 2. Нормализуем Unicode
     normalized = unicodedata.normalize('NFKC', text)
-
-    # 3. Убираем все символы, кроме букв, цифр, пробелов
     cleaned = re.sub(r'[^\w\s]', ' ', normalized)
-
-    # 4. Приводим к нижнему регистру
     cleaned = cleaned.lower()
-
-    # 5. Убираем лишние пробелы
     cleaned = ' '.join(cleaned.split())
-
     return cleaned
 
-
-# ============================================================
-# НОРМАЛИЗАЦИЯ (старая, для ключевых слов)
-# ============================================================
 
 def normalize_text(text: str) -> str:
     if not text:
         return ""
-
-    # Заменяем гомоглифы
     text = replace_homoglyphs(text)
-
     text = text.lower()
     text = re.sub(r"\s+", " ", text)
     return text.strip()
@@ -597,24 +561,14 @@ def find_keywords(text: str):
     return matched_words
 
 
-# ============================================================
-# ПОИСК КОДОВ СТРАН (как отдельных слов)
-# ============================================================
-
 def find_geo_codes(text: str):
-    """
-    Ищет коды стран как ОТДЕЛЬНЫЕ слова (с границами).
-    Например, "DE" найдёт, а "data" — нет.
-    """
     if not text:
         return []
-
     matched = []
     for code in GEO_CODES:
         pattern = rf"(?<![A-Za-z]){re.escape(code)}(?![A-Za-z])"
         if re.search(pattern, text, re.IGNORECASE):
             matched.append(code)
-
     return matched
 
 
@@ -662,7 +616,6 @@ async def monitor_message(event):
         if event.chat_id not in TARGET_CHATS:
             return
 
-        # === ЧЁРНЫЙ СПИСОК ===
         if event.sender_id in BANNED_USERS:
             print(f"⏭️ Пропущено (в чёрном списке): {event.sender_id}")
             return
@@ -680,7 +633,6 @@ async def monitor_message(event):
         chat_title = getattr(chat, "title", "Unknown chat")
         chat_username = getattr(chat, "username", None)
 
-        # === СТОП-СЛОВА (ДВОЙНАЯ ПРОВЕРКА) ===
         normalized_text = normalize_text_for_filter(message_text)
         simple_lower = message_text.lower()
 
@@ -694,10 +646,7 @@ async def monitor_message(event):
         if stop_word_found:
             return
 
-        # === КЛЮЧЕВЫЕ СЛОВА ===
         matched_words = find_keywords(message_text)
-
-        # === КОДЫ СТРАН (отдельная проверка) ===
         matched_geos = find_geo_codes(message_text)
 
         if not matched_words and not matched_geos:
@@ -705,7 +654,6 @@ async def monitor_message(event):
 
         all_matches = matched_words + matched_geos
 
-        # === ДУБЛИКАТЫ ===
         sender_id = getattr(sender, "id", None) if sender else None
         if sender_id:
             text_hash = get_text_hash(message_text)
@@ -718,14 +666,12 @@ async def monitor_message(event):
                     if sent_texts:
                         sent_texts.pop()
 
-        # === ИНФОРМАЦИЯ ОБ ОТПРАВИТЕЛЕ ===
         sender_name = "Неизвестно"
         if sender:
             first_name = getattr(sender, "first_name", "") or ""
             last_name = getattr(sender, "last_name", "") or ""
             sender_name = f"{first_name} {last_name}".strip() or "Без имени"
 
-        # === ФОРМИРУЕМ ТЕКСТ ===
         full_text = f"📩 НОВОЕ СООБЩЕНИЕ\n\n"
         full_text += f"📍 Источник: {chat_title}\n"
         full_text += f"👤 Отправитель: {sender_name}\n"
@@ -741,7 +687,6 @@ async def monitor_message(event):
         if chat_username:
             full_text += f"\n\n🔗 Открыть оригинал:\nhttps://t.me/{chat_username}/{event.id}"
 
-        # === ОТПРАВЛЯЕМ ===
         try:
             await client.send_message(destination_peer, full_text)
             print(f"📨 Отправлено в fresh offers из {chat_title}")
@@ -756,116 +701,96 @@ async def monitor_message(event):
 # ОБРАБОТКА ОТВЕТОВ "бан" / "ban" В FRESH OFFERS
 # ============================================================
 
-# Кэш для хранения ID бота, который писал последним (чтобы банить ботов, пишущих в fresh offers)
+# Кэш для хранения sender_id по message_id
 last_sender_by_msg_id = {}
 
 
-@client.on(events.NewMessage(chats=[DESTINATION_CHAT]))
+@client.on(events.NewMessage())
 async def handle_ban_command(event):
     """
-    Слушает сообщения в fresh offers (входящие и исходящие).
-    
-    1. Запоминает sender_id для каждого message_id.
-    2. Если ты отвечаешь 'бан' на сообщение:
-       - Если сообщение — пересылка от бота, берём Sender ID из текста.
-       - Если сообщение — прямая запись бота в чат, баним его sender_id.
+    Ловит ВСЕ сообщения и проверяет, что это fresh offers + команда бан.
+    Фильтр по чату убран — проверяем вручную по ID.
     """
     try:
-        # Запоминаем sender_id каждого нового сообщения
+        # Проверяем, что сообщение из fresh offers
+        if event.chat_id != DESTINATION_CHAT:
+            return
+
+        # Запоминаем sender_id каждого сообщения
         last_sender_by_msg_id[event.message.id] = {
             "sender_id": event.sender_id,
-            "sender_username": getattr(await event.get_sender(), "username", None) if event.sender_id else None,
-            "sender_name": getattr(await event.get_sender(), "first_name", "") if event.sender_id else "",
         }
 
-        # Чистим кэш
         if len(last_sender_by_msg_id) > 2000:
             keys = list(last_sender_by_msg_id.keys())
             for k in keys[:1000]:
                 last_sender_by_msg_id.pop(k, None)
 
-        # Проверяем, что это команда бана
         text = (event.message.raw_text or "").strip().lower()
+
+        print(f"📥 [BAN] Сообщение в fresh offers: '{text[:40]}' | reply_to={event.message.reply_to_msg_id}")
 
         if text not in ["бан", "ban", "🚫", "❌"]:
             return
 
-        # Это должен быть ответ на сообщение
         reply_to = event.message.reply_to_msg_id
         if not reply_to:
-            print("⏭️ Это не ответ на сообщение, пропускаем")
+            print("⏭️ [BAN] Не ответ на сообщение")
             return
-
-        # === Вариант 1: сообщение было пересланным (есть Sender ID в тексте) ===
-        banned_id = None
-        username = ""
-        name = ""
 
         try:
             original_msg = await client.get_messages(DESTINATION_CHAT, ids=reply_to)
         except Exception as e:
-            print(f"❌ Не удалось получить оригинальное сообщение: {e}")
+            print(f"❌ [BAN] Ошибка получения оригинала: {e}")
             return
 
-        if original_msg and original_msg.text:
+        if not original_msg:
+            print("⏭️ [BAN] Оригинал пустой")
+            return
+
+        banned_id = None
+        username = ""
+        name = ""
+
+        # Вариант 1: пересланное сообщение — берём Sender ID из текста
+        if original_msg.text:
             match = re.search(r"🆔 Sender ID: (\d+)", original_msg.text)
             if match:
                 banned_id = int(match.group(1))
-
                 username_match = re.search(r"🔹 Username: @(\S+)", original_msg.text)
                 username = username_match.group(1) if username_match else ""
-
                 name_match = re.search(r"👤 Отправитель: (.+)", original_msg.text)
                 name = name_match.group(1).strip() if name_match else ""
 
-        # === Вариант 2: бот писал напрямую в fresh offers ===
+        # Вариант 2: бот писал напрямую в fresh offers
         if banned_id is None:
             cached = last_sender_by_msg_id.get(reply_to)
             if cached and cached["sender_id"]:
                 banned_id = cached["sender_id"]
-                username = cached.get("sender_username") or ""
-                name = cached.get("sender_name") or ""
-                print(f"🔍 [BAN] Баню прямого отправителя из fresh offers: {banned_id}")
+                print(f"🔍 [BAN] Беру sender_id из кэша: {banned_id}")
 
-        # Если ничего не нашли — выходим
         if not banned_id:
-            print("⏭️ Не удалось определить ID для бана")
-            await client.send_message(
-                DESTINATION_CHAT,
-                "⚠️ Не удалось определить ID. Ответь на сообщение от бота.",
-                reply_to=event.message.id
-            )
+            print("⏭️ [BAN] Не удалось определить ID")
             return
 
-        # Нельзя банить самого себя
         me = await client.get_me()
         if banned_id == me.id:
-            print("⏭️ Попытка забанить себя — пропускаем")
+            print("⏭️ [BAN] Самобан — пропускаем")
             return
 
-        # Проверяем, не в бане ли уже
         if banned_id in BANNED_USERS:
-            await client.send_message(
-                DESTINATION_CHAT,
-                f"⏳ Пользователь `{banned_id}` уже в чёрном списке.",
-                reply_to=event.message.id
-            )
+            print(f"⏳ [BAN] {banned_id} уже в бане")
             return
 
-        # Добавляем в чёрный список
-        BANNED_USERS[banned_id] = {
-            "username": username,
-            "name": name
-        }
+        BANNED_USERS[banned_id] = {"username": username, "name": name}
         save_banned_users(BANNED_USERS)
 
-        print(f"🚫 Пользователь {banned_id} (@{username}) добавлен в чёрный список")
+        print(f"🚫 [BAN] Пользователь {banned_id} (@{username}) добавлен")
 
         try:
             await client.send_message(
                 DESTINATION_CHAT,
-                f"🚫 Пользователь `{banned_id}` (@{username}) добавлен в чёрный список.\n"
-                f"Больше его сообщения не будут пересылаться.",
+                f"🚫 Пользователь `{banned_id}` (@{username}) добавлен в чёрный список.",
                 reply_to=event.message.id
             )
         except Exception as e:
