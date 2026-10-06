@@ -395,7 +395,7 @@ STOP_WORDS = [
     "докер", "докера", "докеру", "докером", "докеры", "докеров", "докерам", "докерами", "докерах",
     "паспорт", "паспорта", "паспорту", "паспортом", "паспорты",
     "паспортов", "паспортам", "паспортами", "паспортах",
-    "паспортик", "паспортика", "паспортику", "паспортиком",
+    "паспортик", "паспортикa", "паспортику", "паспортиком",
     "паспортики", "паспортиков", "паспортикам", "паспортиками", "паспортиках",
     "удостоверение", "удостоверения", "удостоверению", "удостоверением", "удостоверении",
     "удостоверенье", "удостоверенья", "удостоверенью", "удостовереньем",
@@ -443,6 +443,7 @@ STOP_WORDS = [
 
     # === СПАМ-БОТЫ DHM ===
     "dhm_2d3d371cbot", "dhm_754b721ebot", "dhm_868687fdbot",
+    "dhm_da531fcabot",
     "dhm_", "dhm",
 
     # === РАССЫЛКА, РЕКЛАМА ===
@@ -477,6 +478,16 @@ STOP_WORDS = [
     "tlo lookup", "tlo service",
     "tracers", "skip trace", "skip tracing",
     "leads lookup", "find person", "find people",
+
+    # === СПАМ-БОТЫ (xxin7, ylpay) ===
+    "xxin7", "xxin7_bot", "xxxin7_bot",
+    "ylpay", "ylpay_868", "ylpay_868_bot",
+    "want to make money",
+    "stable daily income",
+    "usdt purchasing",
+    "hong kong-mainland",
+    "f2f cash",
+    "usdt to sell",
 ]
 
 
@@ -600,7 +611,6 @@ def find_geo_codes(text: str):
 
     matched = []
     for code in GEO_CODES:
-        # Ищем код как отдельное слово (регистр не важен)
         pattern = rf"(?<![A-Za-z]){re.escape(code)}(?![A-Za-z])"
         if re.search(pattern, text, re.IGNORECASE):
             matched.append(code)
@@ -746,24 +756,50 @@ async def monitor_message(event):
 # ОБРАБОТКА ОТВЕТОВ "бан" / "ban" В FRESH OFFERS
 # ============================================================
 
-@client.on(events.NewMessage(chats=[DESTINATION_CHAT], incoming=True))
+# Кэш для хранения ID бота, который писал последним (чтобы банить ботов, пишущих в fresh offers)
+last_sender_by_msg_id = {}
+
+
+@client.on(events.NewMessage(chats=[DESTINATION_CHAT]))
 async def handle_ban_command(event):
     """
-    Слушает ответы в fresh offers.
-    Если ты отвечаешь на сообщение словом 'бан' или 'ban' —
-    автор оригинального сообщения добавляется в чёрный список.
-    Сообщение НЕ удаляется.
+    Слушает сообщения в fresh offers (входящие и исходящие).
+    
+    1. Запоминает sender_id для каждого message_id.
+    2. Если ты отвечаешь 'бан' на сообщение:
+       - Если сообщение — пересылка от бота, берём Sender ID из текста.
+       - Если сообщение — прямая запись бота в чат, баним его sender_id.
     """
     try:
+        # Запоминаем sender_id каждого нового сообщения
+        last_sender_by_msg_id[event.message.id] = {
+            "sender_id": event.sender_id,
+            "sender_username": getattr(await event.get_sender(), "username", None) if event.sender_id else None,
+            "sender_name": getattr(await event.get_sender(), "first_name", "") if event.sender_id else "",
+        }
+
+        # Чистим кэш
+        if len(last_sender_by_msg_id) > 2000:
+            keys = list(last_sender_by_msg_id.keys())
+            for k in keys[:1000]:
+                last_sender_by_msg_id.pop(k, None)
+
+        # Проверяем, что это команда бана
         text = (event.message.raw_text or "").strip().lower()
 
         if text not in ["бан", "ban", "🚫", "❌"]:
             return
 
+        # Это должен быть ответ на сообщение
         reply_to = event.message.reply_to_msg_id
         if not reply_to:
             print("⏭️ Это не ответ на сообщение, пропускаем")
             return
+
+        # === Вариант 1: сообщение было пересланным (есть Sender ID в тексте) ===
+        banned_id = None
+        username = ""
+        name = ""
 
         try:
             original_msg = await client.get_messages(DESTINATION_CHAT, ids=reply_to)
@@ -771,17 +807,43 @@ async def handle_ban_command(event):
             print(f"❌ Не удалось получить оригинальное сообщение: {e}")
             return
 
-        if not original_msg or not original_msg.text:
-            print("⏭️ Оригинальное сообщение пустое")
+        if original_msg and original_msg.text:
+            match = re.search(r"🆔 Sender ID: (\d+)", original_msg.text)
+            if match:
+                banned_id = int(match.group(1))
+
+                username_match = re.search(r"🔹 Username: @(\S+)", original_msg.text)
+                username = username_match.group(1) if username_match else ""
+
+                name_match = re.search(r"👤 Отправитель: (.+)", original_msg.text)
+                name = name_match.group(1).strip() if name_match else ""
+
+        # === Вариант 2: бот писал напрямую в fresh offers ===
+        if banned_id is None:
+            cached = last_sender_by_msg_id.get(reply_to)
+            if cached and cached["sender_id"]:
+                banned_id = cached["sender_id"]
+                username = cached.get("sender_username") or ""
+                name = cached.get("sender_name") or ""
+                print(f"🔍 [BAN] Баню прямого отправителя из fresh offers: {banned_id}")
+
+        # Если ничего не нашли — выходим
+        if not banned_id:
+            print("⏭️ Не удалось определить ID для бана")
+            await client.send_message(
+                DESTINATION_CHAT,
+                "⚠️ Не удалось определить ID. Ответь на сообщение от бота.",
+                reply_to=event.message.id
+            )
             return
 
-        match = re.search(r"🆔 Sender ID: (\d+)", original_msg.text)
-        if not match:
-            print("⏭️ Sender ID не найден в сообщении")
+        # Нельзя банить самого себя
+        me = await client.get_me()
+        if banned_id == me.id:
+            print("⏭️ Попытка забанить себя — пропускаем")
             return
 
-        banned_id = int(match.group(1))
-
+        # Проверяем, не в бане ли уже
         if banned_id in BANNED_USERS:
             await client.send_message(
                 DESTINATION_CHAT,
@@ -790,19 +852,14 @@ async def handle_ban_command(event):
             )
             return
 
-        username_match = re.search(r"🔹 Username: @(\S+)", original_msg.text)
-        username = username_match.group(1) if username_match else ""
-
-        name_match = re.search(r"👤 Отправитель: (.+)", original_msg.text)
-        name = name_match.group(1).strip() if name_match else ""
-
+        # Добавляем в чёрный список
         BANNED_USERS[banned_id] = {
             "username": username,
             "name": name
         }
         save_banned_users(BANNED_USERS)
 
-        print(f"🚫 Пользователь {banned_id} ({username}) добавлен в чёрный список")
+        print(f"🚫 Пользователь {banned_id} (@{username}) добавлен в чёрный список")
 
         try:
             await client.send_message(
